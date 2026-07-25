@@ -23,7 +23,7 @@
             <i class="fas fa-arrow-right"></i>
         </div>
     </a>
-    <a href="{% url 'documents:en1279_settings' %}" class="doc-card">
+    <a href="{% url 'documents:en1279_settings' %}" class="doc-card doc-card-settings">
         <div class="doc-card-icon doc-card-icon-settings">
             <i class="fas fa-cog"></i>
         </div>
@@ -66,8 +66,9 @@
                     <th>Αρ. Εντύπου</th>
                     <th>Τύπος προϊόντος</th>
                     <th>U</th>
+                    <th>Μετάδοση φωτός</th>
+                    <th>Ηλιακός συντελεστής</th>
                     <th>Ημ/νία</th>
-                    <th>Δημιουργός</th>
                     <th>Ενέργειες</th>
                 </tr>
             </thead>
@@ -77,15 +78,16 @@
                     <td><strong>{{ doc.document_number }}</strong></td>
                     <td>{{ doc.product_designation }}</td>
                     <td>{{ doc.thermal_performance }}</td>
+                    <td>{{ doc.light_performance }}</td>
+                    <td>{{ doc.energy_performance }}</td>
                     <td>{{ doc.created_at|date:"d/m/Y H:i" }}</td>
-                    <td>{{ doc.created_by.username|default:"—" }}</td>
                     <td>
                         <div class="table-actions">
+                            <a href="{% url 'documents:en1279_print' doc.pk %}" class="btn btn-info btn-sm" title="Προεπισκόπηση" target="_blank" rel="noopener">
+                                <i class="fas fa-eye"></i>
+                            </a>
                             <a href="{% url 'documents:en1279_edit' doc.pk %}" class="btn btn-warning btn-sm" title="Επεξεργασία">
                                 <i class="fas fa-edit"></i>
-                            </a>
-                            <a href="{% url 'documents:en1279_print' doc.pk %}" class="btn btn-secondary btn-sm" title="Εκτύπωση" target="_blank" rel="noopener">
-                                <i class="fas fa-print"></i>
                             </a>
                             <a href="{% url 'documents:en1279_delete' doc.pk %}" class="btn btn-danger btn-sm" title="Διαγραφή">
                                 <i class="fas fa-trash"></i>
@@ -126,6 +128,7 @@
     flex-wrap: wrap;
     gap: 1.25rem;
     margin-bottom: 1.5rem;
+    align-items: stretch;
 }
 .doc-card {
     flex: 0 1 360px;
@@ -138,6 +141,9 @@
     border-radius: .75rem;
     padding: 1.25rem 1.5rem;
     color: var(--text-primary);
+}
+.doc-card-settings {
+    margin-left: auto;
 }
 .doc-card:hover { color: var(--text-primary); box-shadow: 0 8px 24px rgba(0,0,0,.2); }
 .doc-card-icon {
@@ -213,6 +219,7 @@
 }
 .btn-sm { padding: .45rem .65rem; }
 .btn-secondary { background: var(--bg-secondary, #6c757d); color: var(--text-primary, #fff); }
+.btn-info { background: #0ea5e9; color: #fff; }
 .btn-warning { background: #ffc107; color: #212529; }
 .btn-danger { background: #dc3545; color: #fff; }
 .empty-state {
