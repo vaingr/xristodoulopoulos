@@ -1,6 +1,12 @@
 from django import forms
 
-from .models import DeclarationOfPerformance, DopSettings, En1279Document, En1279Settings
+from .models import (
+    DeclarationOfPerformance,
+    DopSettings,
+    En1279Document,
+    En1279FieldOption,
+    En1279Settings,
+)
 
 
 class ShowSignatureCheckboxInput(forms.CheckboxInput):
@@ -78,6 +84,13 @@ class DopEmailForm(forms.Form):
 
 
 class En1279DocumentForm(forms.ModelForm):
+    FIELD_OPTION_MAP = (
+        ('product_designation', En1279FieldOption.FIELD_PRODUCT),
+        ('thermal_performance', En1279FieldOption.FIELD_THERMAL),
+        ('light_performance', En1279FieldOption.FIELD_LIGHT),
+        ('energy_performance', En1279FieldOption.FIELD_ENERGY),
+    )
+
     class Meta:
         model = En1279Document
         fields = [
@@ -88,26 +101,10 @@ class En1279DocumentForm(forms.ModelForm):
             'show_signature',
         ]
         widgets = {
-            'product_designation': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'π.χ. 4mm PLANISTAR 60 - 16mm (argon 90%) - 4mm CLEAR',
-                'autocomplete': 'off',
-            }),
-            'thermal_performance': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'π.χ. 1,0',
-                'autocomplete': 'off',
-            }),
-            'light_performance': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'π.χ. 61% - 23%',
-                'autocomplete': 'off',
-            }),
-            'energy_performance': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'π.χ. 0,38 - 38%',
-                'autocomplete': 'off',
-            }),
+            'product_designation': forms.Select(attrs={'class': 'form-control'}),
+            'thermal_performance': forms.Select(attrs={'class': 'form-control'}),
+            'light_performance': forms.Select(attrs={'class': 'form-control'}),
+            'energy_performance': forms.Select(attrs={'class': 'form-control'}),
             'show_signature': ShowSignatureCheckboxInput(attrs={
                 'class': 'dop-checkbox',
             }),
@@ -122,6 +119,42 @@ class En1279DocumentForm(forms.ModelForm):
         self.fields['show_signature'].label = 'Εμφάνιση Υπογραφής'
         if not self.instance.pk and 'show_signature' not in self.initial:
             self.fields['show_signature'].initial = True
+
+        for field_name, field_key in self.FIELD_OPTION_MAP:
+            options = (
+                En1279FieldOption.objects
+                .filter(field_key=field_key, is_active=True)
+                .order_by('sort_order', 'value')
+            )
+            choices = [('', '— Επίλεξε —')] + [(option.value, option.value) for option in options]
+            current = ''
+            if self.is_bound:
+                current = self.data.get(field_name, '') or ''
+            elif self.instance.pk:
+                current = getattr(self.instance, field_name, '') or ''
+            if current and current not in {value for value, _ in choices}:
+                choices.append((current, current))
+            self.fields[field_name].choices = choices
+            self.fields[field_name].widget.choices = choices
+
+
+class En1279FieldOptionForm(forms.ModelForm):
+    class Meta:
+        model = En1279FieldOption
+        fields = ['field_key', 'value']
+        widgets = {
+            'field_key': forms.Select(attrs={'class': 'form-control'}),
+            'value': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Νέα επιλογή...',
+                'autocomplete': 'off',
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['field_key'].label = 'Πεδίο'
+        self.fields['value'].label = 'Τιμή'
 
 
 class GreekClearableFileInput(forms.ClearableFileInput):

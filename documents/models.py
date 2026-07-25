@@ -589,3 +589,42 @@ class En1279Document(models.Model):
 
             self.document_number = f'{prefix}{max_number + 1:04d}{suffix}'
         super().save(*args, **kwargs)
+
+
+class En1279FieldOption(models.Model):
+    """Επιλογές dropdown για τα χειροκίνητα πεδία του EN 1279-5."""
+
+    FIELD_PRODUCT = 'product_designation'
+    FIELD_THERMAL = 'thermal_performance'
+    FIELD_LIGHT = 'light_performance'
+    FIELD_ENERGY = 'energy_performance'
+    FIELD_CHOICES = (
+        (FIELD_PRODUCT, 'Τύπος προϊόντος'),
+        (FIELD_THERMAL, 'Συντελεστής θερμοαγωγιμότητας U'),
+        (FIELD_LIGHT, 'Μετάδοση φωτός - αντανάκλαση φωτός'),
+        (FIELD_ENERGY, 'Ηλιακός συντελεστής / Αντανάκλαση ενέργειας'),
+    )
+
+    field_key = models.CharField(
+        max_length=40,
+        choices=FIELD_CHOICES,
+        verbose_name='Πεδίο',
+    )
+    value = models.CharField(max_length=255, verbose_name='Τιμή')
+    sort_order = models.PositiveIntegerField(default=0, verbose_name='Σειρά')
+    is_active = models.BooleanField(default=True, verbose_name='Ενεργή')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Ημερομηνία Δημιουργίας')
+
+    class Meta:
+        verbose_name = 'Επιλογή πεδίου EN 1279-5'
+        verbose_name_plural = 'Επιλογές πεδίων EN 1279-5'
+        ordering = ['field_key', 'sort_order', 'value']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['field_key', 'value'],
+                name='uniq_en1279_field_option_value',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.get_field_key_display()}: {self.value}'

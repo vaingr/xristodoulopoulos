@@ -1,6 +1,12 @@
 from django.contrib import admin
 
-from .models import DeclarationOfPerformance, DopSettings, En1279Document, En1279Settings
+from .models import (
+    DeclarationOfPerformance,
+    DopSettings,
+    En1279Document,
+    En1279FieldOption,
+    En1279Settings,
+)
 
 
 @admin.register(DopSettings)
@@ -45,3 +51,11 @@ class En1279DocumentAdmin(admin.ModelAdmin):
         'document_number',
         'product_designation',
     )
+
+
+@admin.register(En1279FieldOption)
+class En1279FieldOptionAdmin(admin.ModelAdmin):
+    list_display = ('field_key', 'value', 'sort_order', 'is_active', 'created_at')
+    list_filter = ('field_key', 'is_active')
+    search_fields = ('value',)
+    ordering = ('field_key', 'sort_order', 'value')

@@ -1,0 +1,186 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Επιλογές Πεδίων EN 1279-5{% endblock %}
+
+{% block content %}
+<style>.content-wrapper { border: none !important; }</style>
+
+<div class="page-header">
+    <h1><i class="fas fa-list-ul"></i> Επιλογές Πεδίων EN 1279-5</h1>
+    <a href="{% url 'documents:en1279_list' %}" class="btn btn-secondary btn-sm">Επιστροφή</a>
+</div>
+
+<p class="page-desc">
+    Καταχώρησε τις τιμές που θα εμφανίζονται στα dropdown κατά τη δημιουργία εντύπου.
+</p>
+
+<div class="form-card add-card">
+    <h2>Νέα επιλογή</h2>
+    <form method="post" class="add-form">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add">
+        <div class="add-grid">
+            <div class="form-group">
+                <label for="{{ form.field_key.id_for_label }}">{{ form.field_key.label }}</label>
+                {{ form.field_key }}
+                {% if form.field_key.errors %}
+                <div class="field-error">{{ form.field_key.errors|striptags }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.value.id_for_label }}">{{ form.value.label }}</label>
+                {{ form.value }}
+                {% if form.value.errors %}
+                <div class="field-error">{{ form.value.errors|striptags }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group form-actions-inline">
+                <button type="submit" class="btn btn-primary">Προσθήκη</button>
+            </div>
+        </div>
+        {% if form.non_field_errors %}
+        <div class="field-error">{{ form.non_field_errors|striptags }}</div>
+        {% endif %}
+    </form>
+</div>
+
+<div class="option-groups">
+    {% for group in option_groups %}
+    <div class="option-group">
+        <h2>{{ group.label }}</h2>
+        {% if group.options %}
+        <ul class="option-list">
+            {% for option in group.options %}
+            <li>
+                <span>{{ option.value }}</span>
+                <form method="post" class="delete-form" onsubmit="return confirm('Διαγραφή της επιλογής;');">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="option_id" value="{{ option.pk }}">
+                    <button type="submit" class="btn btn-danger btn-sm" title="Διαγραφή">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty-hint">Δεν υπάρχουν επιλογές ακόμη.</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+.page-header h1 {
+    margin: 0;
+    font-size: 1.35rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    color: var(--text-primary);
+}
+.page-desc {
+    margin: 0 0 1.25rem;
+    color: var(--text-secondary);
+    font-size: .9rem;
+}
+.form-card, .option-group {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: .75rem;
+    padding: 1.25rem 1.5rem;
+}
+.add-card { margin-bottom: 1.25rem; max-width: 920px; }
+.add-card h2, .option-group h2 {
+    margin: 0 0 1rem;
+    font-size: 1.05rem;
+    color: var(--text-primary);
+}
+.add-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1.6fr auto;
+    gap: 1rem;
+    align-items: end;
+}
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+}
+.form-group label {
+    font-size: .875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.form-control, .add-form select, .add-form input[type="text"] {
+    width: 100%;
+    padding: .6rem .75rem;
+    border: 1px solid var(--card-border, #ddd);
+    border-radius: .375rem;
+    font-size: .875rem;
+    background: var(--bg-primary, #fff);
+    color: var(--text-primary, #333);
+    box-sizing: border-box;
+}
+.form-actions-inline { justify-content: flex-end; }
+.option-groups {
+    display: grid;
+    gap: 1rem;
+    max-width: 920px;
+}
+.option-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+.option-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .65rem .85rem;
+    border: 1px solid var(--card-border);
+    border-radius: .5rem;
+    background: var(--bg-primary, rgba(255,255,255,.03));
+    color: var(--text-primary);
+    font-size: .9rem;
+}
+.delete-form { margin: 0; }
+.empty-hint {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: .875rem;
+}
+.field-error { color: #dc3545; font-size: .8125rem; margin-top: .35rem; }
+.btn {
+    padding: .65rem 1rem;
+    border: none;
+    border-radius: .5rem;
+    font-size: .875rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+}
+.btn-sm { padding: .45rem .65rem; }
+.btn-primary { background: var(--accent, #007bff); color: #fff; }
+.btn-secondary { background: var(--bg-secondary, #6c757d); color: var(--text-primary, #fff); }
+.btn-danger { background: #dc3545; color: #fff; }
+@media (max-width: 800px) {
+    .add-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}

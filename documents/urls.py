@@ -17,6 +17,7 @@ urlpatterns = [
     path('en1279/', views.en1279_list, name='en1279_list'),
     path('en1279/create/', views.en1279_create, name='en1279_create'),
     path('en1279/settings/', views.en1279_settings, name='en1279_settings'),
+    path('en1279/options/', views.en1279_options, name='en1279_options'),
     path('en1279/<int:pk>/edit/', views.en1279_edit, name='en1279_edit'),
     path('en1279/<int:pk>/print/', views.en1279_print, name='en1279_print'),
     path('en1279/<int:pk>/email/', views.en1279_email, name='en1279_email'),

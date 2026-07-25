@@ -12,9 +12,16 @@ from .forms import (
     DopEmailForm,
     DopSettingsForm,
     En1279DocumentForm,
+    En1279FieldOptionForm,
     En1279SettingsForm,
 )
-from .models import DeclarationOfPerformance, DopSettings, En1279Document, En1279Settings
+from .models import (
+    DeclarationOfPerformance,
+    DopSettings,
+    En1279Document,
+    En1279FieldOption,
+    En1279Settings,
+)
 from .pdf_utils import generate_dop_pdf, generate_en1279_pdf
 
 
@@ -134,6 +141,10 @@ def dop_delete(request, pk):
 
 @_documents_access_required
 def dop_settings(request):
+    if not request.user.is_superuser:
+        messages.error(request, 'Μόνο οι superusers έχουν πρόσβαση στις ρυθμίσεις εντύπου.')
+        return redirect('documents:dop_list')
+
     settings_obj = DopSettings.get_solo()
     if request.method == 'POST':
         form = DopSettingsForm(request.POST, request.FILES, instance=settings_obj)
@@ -254,6 +265,10 @@ def _en1279_print_context(request, doc, pdf_mode=False, email_form=None):
 
 @_documents_access_required
 def en1279_settings(request):
+    if not request.user.is_superuser:
+        messages.error(request, 'Μόνο οι superusers έχουν πρόσβαση στις ρυθμίσεις εντύπου.')
+        return redirect('documents:en1279_list')
+
     settings_obj = En1279Settings.get_solo()
     if request.method == 'POST':
         form = En1279SettingsForm(request.POST, request.FILES, instance=settings_obj)
@@ -280,6 +295,48 @@ def en1279_settings(request):
         'form': form,
         'settings': settings_obj,
         'row_forms': row_forms,
+    })
+
+
+@_documents_access_required
+def en1279_options(request):
+    if request.method == 'POST':
+        action = request.POST.get('action', 'add')
+        if action == 'delete':
+            option_id = request.POST.get('option_id')
+            option = get_object_or_404(En1279FieldOption, pk=option_id)
+            label = option.value
+            option.delete()
+            messages.success(request, f'Η επιλογή «{label}» διαγράφηκε.')
+            return redirect('documents:en1279_options')
+
+        form = En1279FieldOptionForm(request.POST)
+        if form.is_valid():
+            option = form.save(commit=False)
+            option.value = option.value.strip()
+            option.save()
+            messages.success(
+                request,
+                f'Προστέθηκε επιλογή στο πεδίο «{option.get_field_key_display()}».',
+            )
+            return redirect('documents:en1279_options')
+        messages.error(request, 'Δεν ήταν δυνατή η αποθήκευση της επιλογής. Έλεγξε τα πεδία.')
+    else:
+        form = En1279FieldOptionForm()
+
+    option_groups = []
+    for field_key, field_label in En1279FieldOption.FIELD_CHOICES:
+        option_groups.append({
+            'key': field_key,
+            'label': field_label,
+            'options': En1279FieldOption.objects.filter(field_key=field_key).order_by(
+                'sort_order', 'value'
+            ),
+        })
+
+    return render(request, 'documents/en1279_options.html', {
+        'form': form,
+        'option_groups': option_groups,
     })
 
 
