@@ -108,9 +108,10 @@
     color: var(--text-primary);
 }
 .page-desc {
-    margin: 0 0 1.25rem;
+    margin: 0 auto 1.25rem;
     color: var(--text-secondary);
     font-size: .9rem;
+    max-width: 920px;
 }
 .form-card, .option-group {
     background: var(--card-bg);
@@ -118,7 +119,12 @@
     border-radius: .75rem;
     padding: 1.25rem 1.5rem;
 }
-.add-card { margin-bottom: 1.25rem; max-width: 920px; }
+.add-card {
+    margin-bottom: 1.25rem;
+    max-width: 920px;
+    margin-left: auto;
+    margin-right: auto;
+}
 .add-card h2, .option-group h2 {
     margin: 0 0 1rem;
     font-size: 1.05rem;
@@ -155,6 +161,8 @@
     display: grid;
     gap: 1rem;
     max-width: 920px;
+    margin-left: auto;
+    margin-right: auto;
 }
 .option-list {
     list-style: none;
