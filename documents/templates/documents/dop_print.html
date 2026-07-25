@@ -49,8 +49,137 @@
 
         .btn-primary { background: var(--brand); color: #fff; }
         .btn-secondary { background: #e5e7eb; color: #111; border: 1px solid #cbd5e1; }
+        .btn-email { background: #059669; color: #fff; }
+        .btn-pdf { background: #f59e0b; color: #fff; }
         .btn-close { background: #dc2626; color: #fff; }
+        .btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
 
+        .print-messages {
+            max-width: 210mm;
+            margin: 0 auto 1rem;
+        }
+        .print-message {
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+        .print-message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+        }
+        .print-message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        .print-message.warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .email-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+        .email-modal-overlay[hidden] { display: none; }
+        .email-modal {
+            background: #fff;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 480px;
+            padding: 1.25rem 1.5rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+        .email-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+        }
+        .email-modal-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+        .email-modal-close {
+            border: none;
+            background: transparent;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: #666;
+            line-height: 1;
+        }
+        .email-modal-description,
+        .email-modal-warning {
+            margin: 0 0 1rem;
+            font-size: 0.875rem;
+            color: #444;
+            line-height: 1.4;
+        }
+        .email-modal-warning { color: #b45309; }
+        .email-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            margin-bottom: 0.9rem;
+        }
+        .email-form-group label {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #111;
+        }
+        .dop-email-input,
+        .dop-email-message {
+            width: 100%;
+            padding: 0.65rem 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        .dop-email-message { resize: vertical; }
+        .email-modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .email-sending-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+        }
+        .email-sending-overlay[hidden] { display: none; }
+        .email-sending-modal {
+            background: #fff;
+            padding: 1.5rem 2rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+        .email-sending-modal p {
+            margin: 0;
+            font-size: 0.95rem;
+        }
         .print-pages {
             display: flex;
             flex-direction: column;
@@ -237,22 +366,40 @@
             margin-top: auto;
             padding-top: 1.25rem;
             padding-bottom: 0;
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
             align-items: flex-end;
-            gap: 1.5rem;
+            gap: 0.75rem;
+            position: relative;
         }
 
         .doc-footer-place {
             font-size: 0.85rem;
             font-weight: 700;
             color: var(--text);
+            justify-self: start;
+        }
+
+        .doc-ce-mark {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            justify-self: center;
+        }
+
+        .doc-ce-mark img {
+            max-width: 85px;
+            max-height: 70px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
         }
 
         .doc-signature {
             text-align: center;
             max-width: 280px;
             line-height: 1.3;
+            justify-self: end;
         }
 
         .doc-signature .sig-company {
@@ -302,7 +449,10 @@
             padding: 0;
         }
 
-        body.pdf-export .print-toolbar {
+        body.pdf-export .print-toolbar,
+        body.pdf-export .print-messages,
+        body.pdf-export .email-modal-overlay,
+        body.pdf-export .email-sending-overlay {
             display: none !important;
         }
 
@@ -321,7 +471,10 @@
                 padding: 0;
             }
 
-            .print-toolbar {
+            .print-toolbar,
+            .print-messages,
+            .email-modal-overlay,
+            .email-sending-overlay {
                 display: none !important;
             }
 
@@ -354,9 +507,68 @@
 </head>
 <body{% if pdf_mode %} class="pdf-export"{% endif %}>
 {% if not pdf_mode %}
+{% if messages %}
+<div class="print-messages">
+    {% for message in messages %}
+    <div class="print-message {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
 <div class="print-toolbar">
     <button type="button" class="btn btn-primary" onclick="window.print()">Εκτύπωση</button>
+    <button type="button"
+            class="btn btn-email"
+            id="openDopEmailModal"
+            {% if not email_configured %}disabled title="Οι ρυθμίσεις email δεν έχουν ολοκληρωθεί"{% endif %}>
+        Αποστολή σε email
+    </button>
+    <a class="btn btn-pdf"
+       id="dopPdfBtn"
+       href="{% url 'documents:dop_pdf' dop.pk %}"
+       data-filename="dilosi-apodosis-{{ dop.document_number }}.pdf">
+        Λήψη αρχείου προσφοράς
+    </a>
     <button type="button" class="btn btn-close" onclick="closePrintPage()">Κλείσιμο</button>
+</div>
+
+<div class="email-modal-overlay" id="dopEmailModal" hidden>
+    <div class="email-modal" role="dialog" aria-labelledby="dopEmailModalTitle" aria-modal="true">
+        <div class="email-modal-header">
+            <h3 id="dopEmailModalTitle">Αποστολή σε Email</h3>
+            <button type="button" class="email-modal-close" id="closeDopEmailModal" aria-label="Κλείσιμο">&times;</button>
+        </div>
+        {% if not email_configured %}
+        <p class="email-modal-warning">
+            Οι ρυθμίσεις email δεν έχουν ολοκληρωθεί. Ρυθμίστε τον SMTP από τις ρυθμίσεις συστήματος.
+        </p>
+        {% else %}
+        <p class="email-modal-description">
+            Συμπλήρωσε το email παραλήπτη και προαιρετικά ένα μήνυμα. Θα σταλεί PDF της δήλωσης απόδοσης.
+        </p>
+        <form method="post" action="{% url 'documents:dop_email' dop.pk %}" id="dopEmailForm">
+            {% csrf_token %}
+            <div class="email-form-group">
+                <label for="{{ email_form.email.id_for_label }}">{{ email_form.email.label }}</label>
+                {{ email_form.email }}
+            </div>
+            <div class="email-form-group">
+                <label for="{{ email_form.message.id_for_label }}">{{ email_form.message.label }}</label>
+                {{ email_form.message }}
+            </div>
+            <div class="email-modal-actions">
+                <button type="button" class="btn btn-secondary" id="cancelDopEmailModal">Ακύρωση</button>
+                <button type="submit" class="btn btn-email" id="dopEmailSubmitBtn">Αποστολή</button>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="email-sending-overlay" id="emailSendingOverlay" hidden aria-live="polite" aria-busy="true">
+    <div class="email-sending-modal">
+        <p>Παρακαλώ περιμένετε, γίνεται αποστολή...</p>
+    </div>
 </div>
 {% endif %}
 
@@ -381,14 +593,9 @@
                     {% endif %}
                 </div>
                 <div class="brand-info">
-                    <p class="company-name">Χριστοδουλόπουλος Γ. Αναστάσιος</p>
-                    <p class="company-activity">Επεξεργασία - Εμπορία Υαλοπινάκων</p>
-                    <p class="company-meta">
-                        Ελ. Βενιζέλου 40, Αμαλιάδα<br>
-                        Τηλ. 26220 28686 · Κιν. 6977 240040<br>
-                        Email: info@tasosxristodoulopoulosglass.gr<br>
-                        ΑΦΜ: 043758710 · ΔΟΥ: Αμαλιάδας
-                    </p>
+                    <p class="company-name">{{ dop_settings.header_company_name }}</p>
+                    <p class="company-activity">{{ dop_settings.header_company_activity }}</p>
+                    <p class="company-meta">{{ dop_settings.header_company_details|linebreaksbr }}</p>
                 </div>
             </header>
 
@@ -399,63 +606,45 @@
 
             <div class="sections">
                 <section class="section">
-                    <p class="section-label">1. Μοναδικός κωδικός ταυτοποίησης προϊόντος</p>
+                    <p class="section-label">{{ dop_settings.section_1_label|linebreaksbr }}</p>
                     <div class="value">{{ dop.get_identification_line }}</div>
                 </section>
 
                 <section class="section">
-                    <p class="section-label">
-                        2. Αριθμός τύπου, παρτίδας ή σειράς ή οποιοδήποτε άλλο στοιχείο επιτρέπει την ταυτοποίηση
-                        του προϊόντος του τομέα των δομικών κατασκευών, όπως προβλέπει
-                    </p>
+                    <p class="section-label">{{ dop_settings.section_2_label|linebreaksbr }}</p>
+                    {% if dop_settings.section_2_value %}
+                    <div class="value">{{ dop_settings.section_2_value|linebreaksbr }}</div>
+                    {% endif %}
                 </section>
 
                 <section class="section">
-                    <p class="section-label">
-                        3. Προτεινόμενη χρήση ή χρήσεις του προϊόντος του τομέα δομικών κατασκευών, σύμφωνα με την
-                        ισχύουσα εναρμονισμένη τεχνική προδιαγραφή, όπως προβλέπεται από τον κατασκευαστή:
-                    </p>
-                    <div class="value">{{ intended_use }}</div>
+                    <p class="section-label">{{ dop_settings.section_3_label|linebreaksbr }}</p>
+                    <div class="value">{{ dop_settings.section_3_value|linebreaksbr }}</div>
                 </section>
 
                 <section class="section">
-                    <p class="section-label">
-                        4. Όνομα, εμπορική επωνυμία ή κατατεθέν σήμα και διεύθυνση επικοινωνίας του κατασκευαστή,
-                        όπως προβλέπεται στο άρθρο 11, παράγραφος 5:
-                    </p>
-                    <div class="value">{{ manufacturer }}</div>
+                    <p class="section-label">{{ dop_settings.section_4_label|linebreaksbr }}</p>
+                    <div class="value">{{ dop_settings.section_4_value|linebreaksbr }}</div>
                 </section>
 
                 <section class="section">
-                    <p class="section-label">
-                        5. Όπου εφαρμόζεται, όνομα και διεύθυνση επικοινωνίας του εξουσιοδοτημένου αντιπροσώπου,
-                        η εντολή του οποίου καλύπτει τα καθήκοντα που προβλέπονται στο άρθρο 12 παρ. 2:
-                    </p>
-                    <div class="value">{{ authorized_representative }}</div>
+                    <p class="section-label">{{ dop_settings.section_5_label|linebreaksbr }}</p>
+                    <div class="value">{{ dop_settings.section_5_value|linebreaksbr }}</div>
                 </section>
 
                 <section class="section">
-                    <p class="section-label">
-                        6. Σύστημα ή συστήματα αξιολόγησης και επαλήθευσης της σταθερότητας της απόδοσης του προϊόντος
-                        του τομέα των δομικών κατασκευών όπως καθορίζεται στο παράρτημα V:
-                    </p>
-                    <div class="value">{{ avcp_system }}</div>
+                    <p class="section-label">{{ dop_settings.section_6_label|linebreaksbr }}</p>
+                    <div class="value">{{ dop_settings.section_6_value|linebreaksbr }}</div>
                 </section>
 
                 <section class="section">
-                    <p class="section-label">
-                        7. Σε περίπτωση δήλωσης απόδοσης σχετικά με προϊόν του τομέα δομικών κατασκευών που καλύπτεται
-                        από εναρμονισμένο πρότυπο:
-                    </p>
-                    <div class="value">{{ harmonised_standard }}</div>
+                    <p class="section-label">{{ dop_settings.section_7_label|linebreaksbr }}</p>
+                    <div class="value">{{ dop_settings.section_7_value|linebreaksbr }}</div>
                 </section>
 
                 <section class="section">
-                    <p class="section-label">
-                        8. Σε περίπτωση δήλωσης απόδοσης σχετικά με προϊόν του τομέα δομικών κατασκευών για το οποίο
-                        έχει εκδοθεί ευρωπαϊκή τεχνική αξιολόγηση:
-                    </p>
-                    <div class="value">{{ european_technical_assessment }}</div>
+                    <p class="section-label">{{ dop_settings.section_8_label|linebreaksbr }}</p>
+                    <div class="value">{{ dop_settings.section_8_value|linebreaksbr }}</div>
                 </section>
             </div>
 
@@ -463,14 +652,22 @@
                 <div class="doc-footer-place">
                     Αμαλιάδα {{ dop.created_at|date:"d/m/Y" }}
                 </div>
+                <div class="doc-ce-mark">
+                    {% if dop_settings.ce_mark %}
+                    <img src="{{ request.scheme }}://{{ request.get_host }}{{ dop_settings.ce_mark.url }}"
+                         alt="CE">
+                    {% endif %}
+                </div>
                 <div class="doc-signature">
                     <p class="sig-company">Χριστοδουλόπουλος Γ. Αναστάσιος</p>
                     <p class="sig-activity">Επεξεργασία - Εμπορία Υαλοπινάκων</p>
                     <div class="sig-image-wrap">
-                        {% if dop_settings.signature %}
-                        <img src="{{ request.scheme }}://{{ request.get_host }}{{ dop_settings.signature.url }}"
-                             alt="Υπογραφή"
-                             class="sig-image">
+                        {% if dop.show_signature %}
+                            {% if dop_settings.signature %}
+                            <img src="{{ request.scheme }}://{{ request.get_host }}{{ dop_settings.signature.url }}"
+                                 alt="Υπογραφή"
+                                 class="sig-image">
+                            {% endif %}
                         {% endif %}
                     </div>
                     <p class="sig-caption">Ονοματεπώνυμο και Ιδιότητα</p>
@@ -490,6 +687,84 @@ function closePrintPage() {
         window.location.href = "{% url 'documents:dop_list' %}";
     }, 150);
 }
+
+(function() {
+    var openBtn = document.getElementById('openDopEmailModal');
+    var modal = document.getElementById('dopEmailModal');
+    var closeBtn = document.getElementById('closeDopEmailModal');
+    var cancelBtn = document.getElementById('cancelDopEmailModal');
+    var form = document.getElementById('dopEmailForm');
+    var overlay = document.getElementById('emailSendingOverlay');
+    var submitBtn = document.getElementById('dopEmailSubmitBtn');
+
+    function openModal() {
+        if (!modal) return;
+        modal.hidden = false;
+        var emailInput = document.getElementById('id_dop_email');
+        if (emailInput) emailInput.focus();
+    }
+
+    function closeModal() {
+        if (!modal) return;
+        modal.hidden = true;
+    }
+
+    if (openBtn) openBtn.addEventListener('click', openModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    if (modal) {
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) closeModal();
+        });
+    }
+
+    if (form) {
+        form.addEventListener('submit', function() {
+            if (overlay) overlay.hidden = false;
+            if (submitBtn) submitBtn.disabled = true;
+        });
+    }
+
+    var dopPdfBtn = document.getElementById('dopPdfBtn');
+    if (dopPdfBtn) {
+        dopPdfBtn.addEventListener('click', async function(event) {
+            var url = dopPdfBtn.getAttribute('href');
+            var suggestedName = dopPdfBtn.dataset.filename || 'dilosi-apodosis.pdf';
+            if (!url) return;
+
+            if (!window.showSaveFilePicker) {
+                return;
+            }
+
+            event.preventDefault();
+
+            try {
+                var response = await fetch(url, { credentials: 'same-origin' });
+                if (!response.ok) {
+                    throw new Error('Αποτυχία λήψης PDF.');
+                }
+                var blob = await response.blob();
+
+                var handle = await window.showSaveFilePicker({
+                    suggestedName: suggestedName,
+                    types: [{
+                        description: 'PDF',
+                        accept: { 'application/pdf': ['.pdf'] },
+                    }],
+                });
+
+                var writable = await handle.createWritable();
+                await writable.write(blob);
+                await writable.close();
+            } catch (err) {
+                if (err && (err.name === 'AbortError' || err.name === 'NotAllowedError')) {
+                    return;
+                }
+                window.location.href = url;
+            }
+        });
+    }
+})();
 </script>
 </body>
 </html>

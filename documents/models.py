@@ -16,6 +16,45 @@ DOP_HARMONISED_STANDARD = (
 )
 DOP_EUROPEAN_TECHNICAL_ASSESSMENT = 'Δεν εφαρμόζεται'
 
+DOP_DEFAULT_HEADER_NAME = 'ΧΡΙΣΤΟΔΟΥΛΟΠΟΥΛΟΣ Γ. ΑΝΑΣΤΑΣΙΟΣ'
+DOP_DEFAULT_HEADER_ACTIVITY = 'ΕΠΕΞΕΡΓΑΣΙΑ - ΕΜΠΟΡΙΑ ΥΑΛΟΠΙΝΑΚΩΝ'
+DOP_DEFAULT_HEADER_DETAILS = (
+    'Ελ. Βενιζέλου 40, Αμαλιάδα\n'
+    'Τηλ. 26220 28686 · Κιν. 6977 240040\n'
+    'Email: info@tasosxristodoulopoulosglass.gr\n'
+    'ΑΦΜ: 043758710 · ΔΟΥ: Αμαλιάδας'
+)
+
+DOP_DEFAULT_SECTION_1_LABEL = '1. Μοναδικός κωδικός ταυτοποίησης προϊόντος'
+DOP_DEFAULT_SECTION_2_LABEL = (
+    '2. Αριθμός τύπου, παρτίδας ή σειράς ή οποιοδήποτε άλλο στοιχείο επιτρέπει την ταυτοποίηση '
+    'του προϊόντος του τομέα των δομικών κατασκευών, όπως προβλέπει'
+)
+DOP_DEFAULT_SECTION_3_LABEL = (
+    '3. Προτεινόμενη χρήση ή χρήσεις του προϊόντος του τομέα δομικών κατασκευών, σύμφωνα με την '
+    'ισχύουσα εναρμονισμένη τεχνική προδιαγραφή, όπως προβλέπεται από τον κατασκευαστή:'
+)
+DOP_DEFAULT_SECTION_4_LABEL = (
+    '4. Όνομα, εμπορική επωνυμία ή κατατεθέν σήμα και διεύθυνση επικοινωνίας του κατασκευαστή, '
+    'όπως προβλέπεται στο άρθρο 11, παράγραφος 5:'
+)
+DOP_DEFAULT_SECTION_5_LABEL = (
+    '5. Όπου εφαρμόζεται, όνομα και διεύθυνση επικοινωνίας του εξουσιοδοτημένου αντιπροσώπου, '
+    'η εντολή του οποίου καλύπτει τα καθήκοντα που προβλέπονται στο άρθρο 12 παρ. 2:'
+)
+DOP_DEFAULT_SECTION_6_LABEL = (
+    '6. Σύστημα ή συστήματα αξιολόγησης και επαλήθευσης της σταθερότητας της απόδοσης του προϊόντος '
+    'του τομέα των δομικών κατασκευών όπως καθορίζεται στο παράρτημα V:'
+)
+DOP_DEFAULT_SECTION_7_LABEL = (
+    '7. Σε περίπτωση δήλωσης απόδοσης σχετικά με προϊόν του τομέα δομικών κατασκευών που καλύπτεται '
+    'από εναρμονισμένο πρότυπο:'
+)
+DOP_DEFAULT_SECTION_8_LABEL = (
+    '8. Σε περίπτωση δήλωσης απόδοσης σχετικά με προϊόν του τομέα δομικών κατασκευών για το οποίο '
+    'έχει εκδοθεί ευρωπαϊκή τεχνική αξιολόγηση:'
+)
+
 
 class DopSettings(models.Model):
     """Ρυθμίσεις εντύπου Δηλώσης Απόδοσης (singleton)."""
@@ -36,6 +75,89 @@ class DopSettings(models.Model):
         null=True,
         verbose_name='Υπογραφή',
     )
+    ce_mark = models.ImageField(
+        upload_to='documents/dop/ce/',
+        blank=True,
+        null=True,
+        verbose_name='Σήμανση CE',
+    )
+    header_company_name = models.CharField(
+        max_length=200,
+        default=DOP_DEFAULT_HEADER_NAME,
+        verbose_name='Επωνυμία κεφαλίδας',
+    )
+    header_company_activity = models.CharField(
+        max_length=200,
+        default=DOP_DEFAULT_HEADER_ACTIVITY,
+        verbose_name='Δραστηριότητα κεφαλίδας',
+    )
+    header_company_details = models.TextField(
+        default=DOP_DEFAULT_HEADER_DETAILS,
+        verbose_name='Στοιχεία κεφαλίδας',
+    )
+
+    section_1_label = models.TextField(
+        default=DOP_DEFAULT_SECTION_1_LABEL,
+        verbose_name='Ενότητα 1 - Τίτλος',
+    )
+    section_2_label = models.TextField(
+        default=DOP_DEFAULT_SECTION_2_LABEL,
+        verbose_name='Ενότητα 2 - Τίτλος',
+    )
+    section_2_value = models.TextField(
+        blank=True,
+        default='',
+        verbose_name='Ενότητα 2 - Κείμενο',
+    )
+    section_3_label = models.TextField(
+        default=DOP_DEFAULT_SECTION_3_LABEL,
+        verbose_name='Ενότητα 3 - Τίτλος',
+    )
+    section_3_value = models.TextField(
+        default=DOP_INTENDED_USE,
+        verbose_name='Ενότητα 3 - Κείμενο',
+    )
+    section_4_label = models.TextField(
+        default=DOP_DEFAULT_SECTION_4_LABEL,
+        verbose_name='Ενότητα 4 - Τίτλος',
+    )
+    section_4_value = models.TextField(
+        default=DOP_MANUFACTURER,
+        verbose_name='Ενότητα 4 - Κείμενο',
+    )
+    section_5_label = models.TextField(
+        default=DOP_DEFAULT_SECTION_5_LABEL,
+        verbose_name='Ενότητα 5 - Τίτλος',
+    )
+    section_5_value = models.TextField(
+        default=DOP_AUTHORIZED_REPRESENTATIVE,
+        verbose_name='Ενότητα 5 - Κείμενο',
+    )
+    section_6_label = models.TextField(
+        default=DOP_DEFAULT_SECTION_6_LABEL,
+        verbose_name='Ενότητα 6 - Τίτλος',
+    )
+    section_6_value = models.TextField(
+        default=DOP_AVCP_SYSTEM,
+        verbose_name='Ενότητα 6 - Κείμενο',
+    )
+    section_7_label = models.TextField(
+        default=DOP_DEFAULT_SECTION_7_LABEL,
+        verbose_name='Ενότητα 7 - Τίτλος',
+    )
+    section_7_value = models.TextField(
+        default=DOP_HARMONISED_STANDARD,
+        verbose_name='Ενότητα 7 - Κείμενο',
+    )
+    section_8_label = models.TextField(
+        default=DOP_DEFAULT_SECTION_8_LABEL,
+        verbose_name='Ενότητα 8 - Τίτλος',
+    )
+    section_8_value = models.TextField(
+        default=DOP_EUROPEAN_TECHNICAL_ASSESSMENT,
+        verbose_name='Ενότητα 8 - Κείμενο',
+    )
+
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Τελευταία ενημέρωση')
 
     class Meta:
@@ -78,6 +200,10 @@ class DeclarationOfPerformance(models.Model):
     source_document_number = models.CharField(
         max_length=50,
         verbose_name='Αριθμός παραστατικού',
+    )
+    show_signature = models.BooleanField(
+        default=True,
+        verbose_name='Εμφάνιση Υπογραφής',
     )
     product = models.ForeignKey(
         'products.FinishedProduct',

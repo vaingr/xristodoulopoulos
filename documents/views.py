@@ -1,21 +1,15 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.module_settings import get_module_flags
+from email_utils import get_email_settings, is_email_configured, send_email_with_attachment
 
-from .forms import DeclarationOfPerformanceForm, DopSettingsForm
-from .models import (
-    DOP_AUTHORIZED_REPRESENTATIVE,
-    DOP_AVCP_SYSTEM,
-    DOP_EUROPEAN_TECHNICAL_ASSESSMENT,
-    DOP_HARMONISED_STANDARD,
-    DOP_INTENDED_USE,
-    DOP_MANUFACTURER,
-    DeclarationOfPerformance,
-    DopSettings,
-)
+from .forms import DeclarationOfPerformanceForm, DopEmailForm, DopSettingsForm
+from .models import DeclarationOfPerformance, DopSettings
+from .pdf_utils import generate_dop_pdf
 
 
 def _documents_access_required(view_func):
@@ -33,17 +27,13 @@ def _documents_access_required(view_func):
     return _wrapped
 
 
-def _dop_print_context(request, dop, pdf_mode=False):
+def _dop_print_context(request, dop, pdf_mode=False, email_form=None):
     return {
         'dop': dop,
         'dop_settings': DopSettings.get_solo(),
         'pdf_mode': pdf_mode,
-        'intended_use': DOP_INTENDED_USE,
-        'manufacturer': DOP_MANUFACTURER,
-        'authorized_representative': DOP_AUTHORIZED_REPRESENTATIVE,
-        'avcp_system': DOP_AVCP_SYSTEM,
-        'harmonised_standard': DOP_HARMONISED_STANDARD,
-        'european_technical_assessment': DOP_EUROPEAN_TECHNICAL_ASSESSMENT,
+        'email_configured': is_email_configured(),
+        'email_form': email_form or DopEmailForm(),
     }
 
 
@@ -80,6 +70,7 @@ def dop_create(request):
         if form.is_valid():
             dop = form.save(commit=False)
             dop.created_by = request.user
+            dop.show_signature = bool(form.cleaned_data.get('show_signature'))
             dop.save()
             messages.success(
                 request,
@@ -102,7 +93,9 @@ def dop_edit(request, pk):
     if request.method == 'POST':
         form = DeclarationOfPerformanceForm(request.POST, instance=dop)
         if form.is_valid():
-            dop = form.save()
+            dop = form.save(commit=False)
+            dop.show_signature = bool(form.cleaned_data.get('show_signature'))
+            dop.save()
             messages.success(
                 request,
                 f'Η δήλωση απόδοσης ενημερώθηκε ({dop.get_identification_line()}).',
@@ -162,3 +155,80 @@ def dop_print(request, pk):
         'documents/dop_print.html',
         _dop_print_context(request, dop, pdf_mode=request.GET.get('pdf') == '1'),
     )
+
+
+@_documents_access_required
+def dop_email(request, pk):
+    dop = get_object_or_404(DeclarationOfPerformance, pk=pk)
+    if request.method != 'POST':
+        return redirect('documents:dop_print', pk=pk)
+
+    email_form = DopEmailForm(request.POST)
+    if not email_form.is_valid():
+        for field_errors in email_form.errors.values():
+            for error in field_errors:
+                messages.error(request, error)
+        return redirect('documents:dop_print', pk=pk)
+
+    if not is_email_configured():
+        messages.error(
+            request,
+            'Οι ρυθμίσεις email δεν έχουν ολοκληρωθεί. Ρυθμίστε τον SMTP server από τις ρυθμίσεις συστήματος.',
+        )
+        return redirect('documents:dop_print', pk=pk)
+
+    recipient_email = email_form.cleaned_data['email'].strip()
+    custom_message = email_form.cleaned_data.get('message', '').strip()
+
+    email_settings = get_email_settings()
+    sender_name = email_settings.get('from_name') or 'Χριστοδουλόπουλος'
+    subject = f'{sender_name} - Δήλωση Απόδοσης {dop.document_number}'
+
+    if custom_message:
+        body = custom_message
+    else:
+        body = '\n'.join([
+            f'Σας αποστέλλουμε συνημμένη τη δήλωση απόδοσης {dop.document_number}.',
+            f'Παραστατικό: {dop.get_identification_line()}.',
+            '',
+            'Με εκτίμηση,',
+        ])
+
+    filename = f'dilosi-apodosis-{dop.document_number}.pdf'
+
+    try:
+        pdf_bytes = generate_dop_pdf(dop, request)
+    except Exception as exc:
+        messages.error(request, f'Αποτυχία δημιουργίας PDF: {exc}')
+        return redirect('documents:dop_print', pk=pk)
+
+    success, response_message = send_email_with_attachment(
+        recipient_email,
+        subject,
+        body,
+        pdf_bytes,
+        filename,
+    )
+
+    if success:
+        messages.success(request, f'Η δήλωση απόδοσης στάλθηκε στο email {recipient_email}.')
+    else:
+        messages.error(request, response_message or 'Αποτυχία αποστολής email.')
+
+    return redirect('documents:dop_print', pk=pk)
+
+
+@_documents_access_required
+def dop_pdf(request, pk):
+    dop = get_object_or_404(DeclarationOfPerformance, pk=pk)
+
+    try:
+        pdf_bytes = generate_dop_pdf(dop, request)
+    except Exception as exc:
+        messages.error(request, f'Αποτυχία δημιουργίας PDF: {exc}')
+        return redirect('documents:dop_print', pk=pk)
+
+    filename = f'dilosi-apodosis-{dop.document_number}.pdf'
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
