@@ -53,14 +53,13 @@
             {% for option in group.options %}
             <li>
                 <span>{{ option.value }}</span>
-                <form method="post" class="delete-form" onsubmit="return confirm('Διαγραφή της επιλογής;');">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="delete">
-                    <input type="hidden" name="option_id" value="{{ option.pk }}">
-                    <button type="submit" class="btn btn-danger btn-sm" title="Διαγραφή">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </form>
+                <button type="button"
+                        class="btn btn-danger btn-sm delete-option-btn"
+                        title="Διαγραφή"
+                        data-option-id="{{ option.pk }}"
+                        data-option-value="{{ option.value|escape }}">
+                    <i class="fas fa-trash"></i>
+                </button>
             </li>
             {% endfor %}
         </ul>
@@ -69,6 +68,26 @@
         {% endif %}
     </div>
     {% endfor %}
+</div>
+
+<div class="confirm-modal-overlay" id="deleteOptionModal" hidden>
+    <div class="confirm-modal" role="alertdialog" aria-labelledby="deleteOptionModalTitle" aria-modal="true">
+        <div class="confirm-modal-header">
+            <h3 id="deleteOptionModalTitle">Επιβεβαίωση διαγραφής</h3>
+            <button type="button" class="confirm-modal-close" id="closeDeleteOptionModal" aria-label="Κλείσιμο">&times;</button>
+        </div>
+        <p class="confirm-modal-body">
+            Είστε σίγουροι ότι θέλετε να διαγράψετε την επιλογή
+            <strong id="deleteOptionLabel"></strong>;
+        </p>
+        <form method="post" id="deleteOptionForm" class="confirm-modal-actions">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="option_id" id="deleteOptionId" value="">
+            <button type="button" class="btn btn-secondary" id="cancelDeleteOptionModal">Ακύρωση</button>
+            <button type="submit" class="btn btn-danger">Ναι, διαγραφή</button>
+        </form>
+    </div>
 </div>
 
 <style>
@@ -157,7 +176,6 @@
     color: var(--text-primary);
     font-size: .9rem;
 }
-.delete-form { margin: 0; }
 .empty-hint {
     margin: 0;
     color: var(--text-secondary);
@@ -179,8 +197,100 @@
 .btn-primary { background: var(--accent, #007bff); color: #fff; }
 .btn-secondary { background: var(--bg-secondary, #6c757d); color: var(--text-primary, #fff); }
 .btn-danger { background: #dc3545; color: #fff; }
+
+.confirm-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+.confirm-modal-overlay[hidden] { display: none; }
+.confirm-modal {
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--card-border, #cbd5e1);
+    border-radius: 8px;
+    width: 100%;
+    max-width: 420px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    color: var(--text-primary);
+}
+.confirm-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+.confirm-modal-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+.confirm-modal-close {
+    border: none;
+    background: transparent;
+    font-size: 1.25rem;
+    cursor: pointer;
+    color: var(--text-secondary, #666);
+    line-height: 1;
+}
+.confirm-modal-body {
+    margin: 0 0 1.25rem;
+    font-size: 0.9375rem;
+    line-height: 1.45;
+    color: var(--text-primary);
+}
+.confirm-modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    margin: 0;
+}
 @media (max-width: 800px) {
     .add-grid { grid-template-columns: 1fr; }
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var modal = document.getElementById('deleteOptionModal');
+    var labelEl = document.getElementById('deleteOptionLabel');
+    var idInput = document.getElementById('deleteOptionId');
+    var closeBtn = document.getElementById('closeDeleteOptionModal');
+    var cancelBtn = document.getElementById('cancelDeleteOptionModal');
+
+    function openModal(optionId, optionValue) {
+        if (!modal) return;
+        idInput.value = optionId;
+        labelEl.textContent = optionValue || '';
+        modal.hidden = false;
+    }
+
+    function closeModal() {
+        if (!modal) return;
+        modal.hidden = true;
+        idInput.value = '';
+        labelEl.textContent = '';
+    }
+
+    document.querySelectorAll('.delete-option-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            openModal(btn.dataset.optionId, btn.dataset.optionValue);
+        });
+    });
+
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    if (modal) {
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) closeModal();
+        });
+    }
+});
+</script>
 {% endblock %}
