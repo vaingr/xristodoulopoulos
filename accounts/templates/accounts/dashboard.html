@@ -1,0 +1,256 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Dashboard - Αρχική{% endblock %}
+
+{% block content %}
+<style>
+    .content-wrapper {
+        border: none !important;
+    }
+</style>
+
+<div id="dashboard-bg-wrapper" style="min-height: 80vh; border-radius: 8px; padding: 0;">
+
+<div class="dashboard-cards-row">
+    {% if user.is_superuser or sidebar_modules.warehouse_materials and wh_has_access %}
+    <a href="{% url 'warehouse:dashboard' %}" class="warehouse-card-link">
+        <div class="warehouse-card">
+            <div class="warehouse-card-icon">
+                <i class="fas fa-warehouse"></i>
+            </div>
+            <div class="warehouse-card-content">
+                <h4 class="warehouse-card-title">Αποθήκη Υλικών</h4>
+                <p class="warehouse-card-description">Διαχείριση αποθήκης και υλικών</p>
+            </div>
+            <div class="warehouse-card-arrow">
+                <i class="fas fa-arrow-right"></i>
+            </div>
+        </div>
+    </a>
+    {% endif %}
+
+    {% if user.is_superuser or sidebar_modules.warehouse_finished and wh_perms.perm_finished_products_warehouse %}
+    <a href="{% url 'products:product_warehouse' %}" class="warehouse-card-link">
+        <div class="warehouse-card">
+            <div class="warehouse-card-icon warehouse-card-icon-products">
+                <i class="fas fa-boxes-stacked"></i>
+            </div>
+            <div class="warehouse-card-content">
+                <h4 class="warehouse-card-title">Αποθήκη Έτοιμων Προϊόντων</h4>
+                <p class="warehouse-card-description">Διαχείριση αποθέματος έτοιμων προϊόντων</p>
+            </div>
+            <div class="warehouse-card-arrow">
+                <i class="fas fa-arrow-right"></i>
+            </div>
+        </div>
+    </a>
+    {% endif %}
+
+    {% if user.is_superuser or sidebar_modules.offers and wh_perms.perm_offers %}
+    <a href="{% url 'products:offers' %}" class="warehouse-card-link">
+        <div class="warehouse-card">
+            <div class="warehouse-card-icon warehouse-card-icon-offers">
+                <i class="fas fa-file-invoice"></i>
+            </div>
+            <div class="warehouse-card-content">
+                <h4 class="warehouse-card-title">Προσφορές</h4>
+                <p class="warehouse-card-description">Δημιουργία και διαχείριση προσφορών</p>
+            </div>
+            <div class="warehouse-card-arrow">
+                <i class="fas fa-arrow-right"></i>
+            </div>
+        </div>
+    </a>
+    {% endif %}
+
+    {% if user.is_superuser or sidebar_modules.documents %}
+    <a href="{% url 'documents:hub' %}" class="warehouse-card-link">
+        <div class="warehouse-card">
+            <div class="warehouse-card-icon warehouse-card-icon-documents">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="warehouse-card-content">
+                <h4 class="warehouse-card-title">Έντυπα</h4>
+                <p class="warehouse-card-description">Διαχείριση εντύπων</p>
+            </div>
+            <div class="warehouse-card-arrow">
+                <i class="fas fa-arrow-right"></i>
+            </div>
+        </div>
+    </a>
+    {% endif %}
+</div>
+
+<style>
+.dashboard-cards-row {
+    margin-top: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: stretch;
+}
+
+.warehouse-card-link {
+    flex: 0 1 320px;
+    display: flex;
+    text-decoration: none;
+}
+
+.warehouse-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    width: 100%;
+    min-width: 280px;
+    max-width: 320px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px var(--shadow);
+}
+
+.warehouse-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px var(--shadow);
+}
+
+.warehouse-card-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--accent);
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.warehouse-card-icon-products {
+    background: #20c997;
+}
+
+.warehouse-card-icon-offers {
+    background: #f59e0b;
+}
+
+.warehouse-card-icon-documents {
+    background: #f472b6;
+}
+
+.warehouse-card-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.warehouse-card-title {
+    margin: 0 0 0.25rem 0;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.warehouse-card-description {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.warehouse-card-arrow {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.warehouse-card:hover .warehouse-card-arrow {
+    color: var(--accent);
+    transform: translateX(3px);
+}
+
+@media (max-width: 768px) {
+    .warehouse-card-link {
+        flex: 1 1 100%;
+    }
+
+    .warehouse-card {
+        min-width: 100%;
+        max-width: 100%;
+    }
+}
+
+html[data-theme="dark"] .warehouse-card {
+    background: rgba(45, 55, 72, 0.95);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+html[data-theme="dark"] .warehouse-card-title {
+    color: #f7fafc;
+}
+
+html[data-theme="dark"] .warehouse-card-description {
+    color: #a0aec0;
+}
+
+html[data-theme="dark"] .warehouse-card-arrow {
+    color: #718096;
+}
+
+html[data-theme="dark"] .warehouse-card:hover .warehouse-card-arrow {
+    color: #818cf8;
+}
+</style>
+
+</div>
+
+<style>
+  html[data-theme="dark"] #dashboard-bg-wrapper {
+    background: none !important;
+  }
+  
+  html[data-theme="dark"] .dashboard-admin-section {
+    background-color: #2d3748 !important;
+    border-left-color: #4299e1 !important;
+  }
+  
+  /* Mobile responsive adjustments */
+  @media (max-width: 768px) {
+    #dashboard-bg-wrapper {
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    
+    #dashboard-bg-wrapper h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    #dashboard-bg-wrapper p {
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+    
+    #dashboard-bg-wrapper > div {
+      gap: 0.5rem;
+    }
+    
+    #dashboard-bg-wrapper > div > div {
+      padding: 1rem !important;
+    }
+    
+    #dashboard-bg-wrapper > div > div h3 {
+      font-size: 1.1rem;
+    }
+    
+    #dashboard-bg-wrapper > div > div p {
+      font-size: 0.8rem;
+    }
+  }
+</style>
+{% endblock %} 

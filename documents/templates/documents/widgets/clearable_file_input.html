@@ -1,0 +1,16 @@
+<div class="dop-file-widget">
+{% if widget.is_initial %}
+  <div class="current-file">
+    <strong>{{ widget.initial_text }}</strong>
+    <a href="{{ widget.value.url }}" target="_blank" rel="noopener">{{ widget.value }}</a>
+  </div>
+  {% if not widget.required %}
+  <label class="clear-option" for="{{ widget.checkbox_id }}">
+    <input type="checkbox" name="{{ widget.checkbox_name }}" id="{{ widget.checkbox_id }}"{% if widget.attrs.disabled %} disabled{% endif %}>
+    <span>{{ widget.clear_checkbox_label }}</span>
+  </label>
+  {% endif %}
+  <label class="file-input-label" for="{{ widget.attrs.id }}">{{ widget.input_text }}</label>
+{% endif %}
+  <input type="{{ widget.type }}" name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %}>
+</div>

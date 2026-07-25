@@ -1,0 +1,129 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<style>.content-wrapper { border: none !important; }</style>
+
+<div class="page-header">
+    <h1><i class="fas fa-certificate"></i> {{ page_title }}</h1>
+    <a href="{% url 'documents:dop_list' %}" class="btn btn-secondary btn-sm">Επιστροφή</a>
+</div>
+
+<div class="form-card">
+    <p class="form-intro">
+        Επίλεξε τον τύπο παραστατικού και συμπλήρωσε τον αριθμό.
+        Το υπόλοιπο κείμενο του εντύπου είναι σταθερό όπως στο πρότυπο Δήλωσης Απόδοσης.
+    </p>
+    <form method="post" class="dop-form">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="error-box">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="{{ form.source_document_type.id_for_label }}">{{ form.source_document_type.label }}</label>
+                {{ form.source_document_type }}
+                {% if form.source_document_type.errors %}
+                <div class="field-error">{{ form.source_document_type.errors|striptags }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.source_document_number.id_for_label }}">{{ form.source_document_number.label }}</label>
+                {{ form.source_document_number }}
+                {% if form.source_document_number.errors %}
+                <div class="field-error">{{ form.source_document_number.errors|striptags }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                {% if is_edit %}Αποθήκευση &amp; Προεπισκόπηση{% else %}Δημιουργία Εντύπου{% endif %}
+            </button>
+            <a href="{% url 'documents:dop_list' %}" class="btn btn-secondary">Ακύρωση</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+.page-header h1 {
+    margin: 0;
+    font-size: 1.35rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    color: var(--text-primary);
+}
+.form-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: .75rem;
+    padding: 1.5rem;
+    max-width: 720px;
+}
+.form-intro {
+    margin: 0 0 1.25rem;
+    color: var(--text-secondary);
+    font-size: .9rem;
+    line-height: 1.45;
+}
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+}
+.form-group label {
+    font-size: .875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.form-control, .dop-form select, .dop-form input {
+    width: 100%;
+    padding: .6rem .75rem;
+    border: 1px solid var(--card-border, #ddd);
+    border-radius: .375rem;
+    font-size: .875rem;
+    background: var(--bg-primary, #fff);
+    color: var(--text-primary, #333);
+    box-sizing: border-box;
+}
+.field-error, .error-box { color: #dc3545; font-size: .8125rem; }
+.form-actions {
+    display: flex;
+    gap: .75rem;
+    margin-top: 1.25rem;
+    flex-wrap: wrap;
+}
+.btn {
+    padding: .65rem 1rem;
+    border: none;
+    border-radius: .5rem;
+    font-size: .875rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+.btn-sm { padding: .5rem .75rem; font-size: .8125rem; }
+.btn-primary { background: var(--accent, #007bff); color: #fff; }
+.btn-secondary { background: var(--bg-secondary, #6c757d); color: var(--text-primary, #fff); }
+@media (max-width: 720px) {
+    .form-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}

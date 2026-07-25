@@ -1,0 +1,146 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Τίτλοι{% endblock %}
+
+{% block content %}
+<style>.content-wrapper { border: none !important; }</style>
+
+<div class="page-header">
+    <h1><i class="fas fa-heading"></i> Τίτλοι</h1>
+</div>
+
+<div class="titles-grid">
+    <div class="title-card">
+        <div class="title-header">
+            <span class="title-label"><i class="fas fa-building"></i> Όνομα Πελάτη</span>
+            <span class="current-value">{{ client_name }}</span>
+        </div>
+        <form method="post" class="title-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="client_name">
+            <label for="client_name">Νέο όνομα πελάτη</label>
+            <input type="text" id="client_name" name="client_name" value="{{ client_name }}" required>
+            <button type="submit" class="btn btn-primary">Αποθήκευση</button>
+        </form>
+    </div>
+
+    <div class="title-card">
+        <div class="title-header">
+            <span class="title-label"><i class="fas fa-code"></i> Όνομα Εφαρμογής</span>
+            <span class="current-value">{{ app_name_value }}</span>
+        </div>
+        <form method="post" class="title-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="app_name">
+            <label for="app_name">Νέο όνομα εφαρμογής</label>
+            <input type="text" id="app_name" name="app_name" value="{{ app_name_value }}" required>
+            <button type="submit" class="btn btn-primary">Αποθήκευση</button>
+        </form>
+    </div>
+
+    <div class="title-card">
+        <div class="title-header">
+            <span class="title-label"><i class="fas fa-handshake"></i> Όνομα Συνεργάτη</span>
+            <span class="current-value">{{ partner_name }}</span>
+        </div>
+        <form method="post" class="title-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="partner_name">
+            <label for="partner_name">Νέο όνομα συνεργάτη</label>
+            <input type="text" id="partner_name" name="partner_name" value="{{ partner_name }}" required>
+            <button type="submit" class="btn btn-primary">Αποθήκευση</button>
+        </form>
+    </div>
+</div>
+
+<p class="titles-note">Οι αλλαγές εφαρμόζονται αμέσως. Αν δεν έχει οριστεί τιμή, χρησιμοποιείται το προεπιλεγμένο «DataLab».</p>
+
+<style>
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+.page-header h1 {
+    margin: 0;
+    font-size: 1.35rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    color: var(--text-primary);
+}
+.titles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+}
+.title-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: .75rem;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+.title-header {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+.title-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+.current-value {
+    background: var(--bg-secondary, rgba(148,163,184,.12));
+    border: 1px solid var(--card-border);
+    border-radius: .5rem;
+    padding: .75rem 1rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+.title-form {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+.title-form label {
+    font-size: .875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+.title-form input[type="text"] {
+    padding: .65rem .75rem;
+    border: 1px solid var(--card-border, #ddd);
+    border-radius: .375rem;
+    font-size: .875rem;
+    background: var(--bg-primary, #fff);
+    color: var(--text-primary, #333);
+}
+.btn {
+    padding: .65rem 1rem;
+    border: none;
+    border-radius: .5rem;
+    font-size: .875rem;
+    cursor: pointer;
+    margin-top: .25rem;
+}
+.btn-primary {
+    background: var(--accent, #007bff);
+    color: #fff;
+}
+.btn-primary:hover {
+    background: var(--accent-hover, #0056b3);
+}
+.titles-note {
+    margin-top: 1.25rem;
+    color: var(--text-secondary);
+    font-size: .875rem;
+}
+</style>
+{% endblock %}

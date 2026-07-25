@@ -1,0 +1,128 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Modules{% endblock %}
+
+{% block content %}
+<style>.content-wrapper { border: none !important; }</style>
+
+<div class="page-header">
+    <h1><i class="fas fa-puzzle-piece"></i> Modules</h1>
+    <a href="{% url 'application_management' %}" class="btn btn-secondary">Επιστροφή</a>
+</div>
+
+<p class="page-desc">
+    Επίλεξε ποιες ενότητες του sidebar θα βλέπουν οι απλοί χρήστες.
+    Οι superusers βλέπουν πάντα όλες τις επιλογές.
+</p>
+
+<form method="post" class="modules-card">
+    {% csrf_token %}
+    <div class="modules-list">
+        {% for module in modules %}
+        <label class="module-row" for="module-{{ module.key }}">
+            <span class="module-info">
+                <span class="module-title"><i class="{{ module.icon }}"></i> {{ module.label }}</span>
+                <span class="module-desc">{{ module.description }}</span>
+            </span>
+            <input type="checkbox"
+                   id="module-{{ module.key }}"
+                   name="{{ module.key }}"
+                   {% if module.enabled %}checked{% endif %}>
+        </label>
+        {% endfor %}
+    </div>
+    <button type="submit" class="btn btn-primary">Αποθήκευση</button>
+</form>
+
+<style>
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+.page-header h1 {
+    margin: 0;
+    font-size: 1.35rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    color: var(--text-primary);
+}
+.page-desc {
+    margin: 0 0 1.25rem;
+    color: var(--text-secondary);
+    font-size: .9rem;
+}
+.modules-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: .75rem;
+    padding: 1.5rem;
+    max-width: 720px;
+}
+.modules-list {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    margin-bottom: 1.25rem;
+}
+.module-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--card-border);
+    border-radius: .5rem;
+    background: var(--bg-secondary, rgba(148,163,184,.08));
+    cursor: pointer;
+}
+.module-info {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+    min-width: 0;
+}
+.module-title {
+    color: var(--text-primary);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+.module-desc {
+    color: var(--text-secondary);
+    font-size: .8125rem;
+}
+.module-row input[type="checkbox"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.btn {
+    padding: .65rem 1rem;
+    border: none;
+    border-radius: .5rem;
+    font-size: .875rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+.btn-primary {
+    background: var(--accent, #007bff);
+    color: #fff;
+}
+.btn-primary:hover {
+    background: var(--accent-hover, #0056b3);
+}
+.btn-secondary {
+    background: var(--bg-secondary, #6c757d);
+    color: var(--text-primary, #fff);
+}
+</style>
+{% endblock %}

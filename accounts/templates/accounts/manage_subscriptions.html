@@ -1,0 +1,200 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Συνδρομές Χρηστών{% endblock %}
+
+{% block content %}
+<style>.content-wrapper { border: none !important; }</style>
+
+<div class="page-header">
+    <h1><i class="fas fa-id-card"></i> Διαχείριση Συνδρομών Χρηστών</h1>
+</div>
+
+<div class="subscriptions-card">
+    {% if user_forms %}
+    <div class="table-wrap">
+        <table class="subscriptions-table">
+            <thead>
+                <tr>
+                    <th>Χρήστης</th>
+                    <th>Ρόλος</th>
+                    <th>Συνδρομή έως</th>
+                    <th>Υπόλοιπο (μέρες)</th>
+                    <th>Κατάσταση</th>
+                    <th>Ενέργειες</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user, form, subscription, days_left in user_forms %}
+                <tr>
+                    <td><strong>{{ user.username }}</strong></td>
+                    <td>
+                        {% if user.is_superuser %}
+                        <span class="role-badge role-superuser">Superuser</span>
+                        {% else %}
+                        <span class="role-badge role-user">Χρήστης</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="post" id="sub-form-{{ user.id }}" class="inline-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="user_id" value="{{ user.id }}">
+                            {{ form.expiry_date }}
+                        </form>
+                    </td>
+                    <td>
+                        {% if days_left is not None %}
+                            {% if days_left >= 0 %}
+                                {% if days_left < 7 %}
+                                    <span class="days-left warning">{{ days_left }}</span>
+                                {% else %}
+                                    <span class="days-left ok">{{ days_left }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="days-left expired">0</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="days-left none">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if subscription and not subscription.is_active %}
+                        <span class="status-badge expired">Ληγμένη</span>
+                        {% elif subscription %}
+                        <span class="status-badge active">Ενεργή</span>
+                        {% else %}
+                        <span class="status-badge none">Χωρίς συνδρομή</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button type="submit" form="sub-form-{{ user.id }}" class="btn btn-primary btn-sm">Αποθήκευση</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>Δεν υπάρχουν χρήστες.</p>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+.page-header h1 {
+    margin: 0;
+    font-size: 1.35rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    color: var(--text-primary);
+}
+.subscriptions-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: .75rem;
+    padding: 1.5rem;
+}
+.table-wrap { overflow-x: auto; }
+.subscriptions-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .875rem;
+    min-width: 720px;
+}
+.subscriptions-table th,
+.subscriptions-table td {
+    padding: .75rem 1rem;
+    border-bottom: 1px solid var(--card-border);
+    text-align: left;
+    color: var(--text-primary);
+    vertical-align: middle;
+}
+.subscriptions-table th {
+    color: var(--text-secondary);
+    font-size: .75rem;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+.inline-form { display: inline; margin: 0; }
+.subscriptions-table input[type="date"] {
+    padding: .5rem .75rem;
+    border: 1px solid var(--card-border, #ddd);
+    border-radius: .375rem;
+    font-size: .875rem;
+    background: var(--bg-primary, #fff);
+    color: var(--text-primary, #333);
+}
+.role-badge,
+.status-badge {
+    display: inline-block;
+    padding: .25rem .625rem;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.role-badge.role-superuser {
+    background: rgba(168, 85, 247, .18);
+    color: #c084fc;
+}
+.role-badge.role-user {
+    background: rgba(148, 163, 184, .18);
+    color: #94a3b8;
+}
+.status-badge.active {
+    background: rgba(39, 174, 96, .18);
+    color: #27ae60;
+}
+.status-badge.expired {
+    background: rgba(220, 53, 69, .18);
+    color: #dc3545;
+}
+.status-badge.none {
+    background: rgba(148, 163, 184, .18);
+    color: #94a3b8;
+}
+.days-left.ok {
+    color: #27ae60;
+    font-weight: bold;
+}
+.days-left.warning {
+    color: #e67e22;
+    font-weight: bold;
+}
+.days-left.expired {
+    color: #dc3545;
+    font-weight: bold;
+}
+.days-left.none {
+    color: var(--text-secondary, #888);
+}
+.btn {
+    padding: .5rem .75rem;
+    border: none;
+    border-radius: .5rem;
+    font-size: .8125rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.btn-sm { padding: .5rem .75rem; }
+.btn-primary {
+    background: var(--accent, #007bff);
+    color: #fff;
+}
+.btn-primary:hover {
+    background: var(--accent-hover, #0056b3);
+}
+.empty-state {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--text-secondary);
+}
+</style>
+{% endblock %}

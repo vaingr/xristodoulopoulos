@@ -1,0 +1,108 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Διαχείριση Εφαρμογής{% endblock %}
+
+{% block content %}
+<style>.content-wrapper { border: none !important; }</style>
+
+<div class="page-header">
+    <h1><i class="fas fa-cogs"></i> Διαχείριση Εφαρμογής</h1>
+</div>
+
+<div class="admin-grid">
+    <a href="{% url 'manage_users' %}" class="admin-card admin-card-cyan">
+        <i class="fas fa-users-cog"></i>
+        <h3>Διαχείριση Χρηστών</h3>
+        <p>Χρήστες, κωδικοί και συνδρομές</p>
+    </a>
+
+    <a href="{% url 'database_management' %}" class="admin-card admin-card-purple">
+        <i class="fas fa-database"></i>
+        <h3>Διαχείριση Βάσης</h3>
+        <p>Backup και Restore</p>
+    </a>
+
+    <a href="{% url 'manage_titles' %}" class="admin-card admin-card-orange">
+        <i class="fas fa-heading"></i>
+        <h3>Τίτλοι</h3>
+        <p>Πελάτης, εφαρμογή, συνεργάτης</p>
+    </a>
+
+    <a href="{% url 'manage_email_settings' %}" class="admin-card admin-card-indigo">
+        <i class="fas fa-envelope"></i>
+        <h3>Ρυθμίσεις Email</h3>
+        <p>Ρυθμίσεις αποστολής email</p>
+    </a>
+
+    <a href="{% url 'manage_sms_settings' %}" class="admin-card admin-card-green">
+        <i class="fas fa-sms"></i>
+        <h3>Ρυθμίσεις SMS</h3>
+        <p>Ρυθμίσεις αποστολής SMS</p>
+    </a>
+
+    <a href="{% url 'manage_modules' %}" class="admin-card admin-card-teal">
+        <i class="fas fa-puzzle-piece"></i>
+        <h3>Modules</h3>
+        <p>Ορατότητα ενοτήτων για απλούς χρήστες</p>
+    </a>
+</div>
+
+<style>
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+.page-header h1 {
+    margin: 0;
+    font-size: 1.35rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    color: var(--text-primary);
+}
+.admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+}
+.admin-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    text-decoration: none;
+    color: #fff;
+    border-radius: .75rem;
+    padding: 1.5rem 1.25rem;
+    border: 1px solid transparent;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+.admin-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
+    color: #fff;
+}
+.admin-card i {
+    font-size: 1.75rem;
+    margin-bottom: .75rem;
+}
+.admin-card h3 {
+    margin: 0 0 .35rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+.admin-card p {
+    margin: 0;
+    font-size: .8125rem;
+    opacity: .9;
+}
+.admin-card-cyan { background: #17a2b8; }
+.admin-card-purple { background: #6f42c1; }
+.admin-card-orange { background: #fd7e14; }
+.admin-card-indigo { background: #6610f2; }
+.admin-card-green { background: #28a745; }
+.admin-card-teal { background: #20c997; }
+</style>
+{% endblock %}

@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Δήλωση Απόδοσης - {{ dop.get_identification_line }}</title>
+    <style>
+        :root {
+            --brand: #00737a;
+            --brand-dark: #005f65;
+            --fill: #f2f2f2;
+            --line: #c5cdd0;
+            --text: #111;
+            --muted: #444;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            background: #e5e7eb;
+            margin: 0;
+            padding: 1.5rem;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .print-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin: 0 auto 1.5rem;
+            max-width: 210mm;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.9375rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            font-family: inherit;
+        }
+
+        .btn-primary { background: var(--brand); color: #fff; }
+        .btn-secondary { background: #e5e7eb; color: #111; border: 1px solid #cbd5e1; }
+        .btn-close { background: #dc2626; color: #fff; }
+
+        .print-pages {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            align-items: center;
+        }
+
+        .a4-page {
+            width: 210mm;
+            height: 297mm;
+            padding: 0;
+            background: #fff;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .a4-page-body {
+            flex: 1;
+            min-height: 0;
+            padding: 0 10mm;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 0;
+        }
+
+        .page-watermark {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.08;
+        }
+
+        .page-watermark img {
+            max-width: 70%;
+            max-height: 55%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .a4-page-body > *:not(.page-watermark) {
+            position: relative;
+            z-index: 1;
+        }
+
+        .top-bar {
+            background: var(--brand);
+            color: #fff;
+            font-size: 0.7rem;
+            letter-spacing: 0.04em;
+            padding: 0.35rem 10mm;
+            margin: 0 -10mm 0.85rem;
+            width: calc(100% + 20mm);
+        }
+
+        .bottom-bar {
+            background: var(--brand);
+            height: 23px;
+            margin: 0.85rem -10mm 0;
+            width: calc(100% + 20mm);
+            flex-shrink: 0;
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 0.9rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--brand);
+        }
+
+        .dop-logo-wrap {
+            flex-shrink: 0;
+        }
+
+        .dop-logo {
+            max-width: 220px;
+            max-height: 110px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .brand-info {
+            text-align: right;
+            line-height: 1.35;
+        }
+
+        .brand-info .company-name {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text);
+            text-transform: uppercase;
+        }
+
+        .brand-info .company-activity {
+            margin: 0.1rem 0 0.35rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--brand);
+            text-transform: uppercase;
+        }
+
+        .brand-info .company-meta {
+            margin: 0;
+            font-size: 0.75rem;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+
+        .doc-title-wrap {
+            margin-bottom: 1rem;
+        }
+
+        .doc-title {
+            display: inline-block;
+            margin: 0 0 0.4rem;
+            padding: 0.35rem 0.75rem;
+            background: var(--brand);
+            color: #fff;
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+            text-transform: uppercase;
+        }
+
+        .dop-mark {
+            display: inline-block;
+            padding: 0.15rem 0.7rem;
+            background: var(--fill);
+            border: 1px solid var(--brand);
+            color: var(--brand);
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            line-height: 1.3;
+        }
+
+        .sections {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .section-label {
+            margin: 0;
+            font-weight: 700;
+            font-size: 0.78rem;
+            line-height: 1.35;
+            text-align: justify;
+            color: var(--text);
+        }
+
+        .value {
+            display: block;
+            width: 100%;
+            min-height: 1.55em;
+            padding: 0.35rem 0.55rem;
+            background: var(--fill);
+            border: 1px solid var(--line);
+            border-left: 3px solid var(--brand);
+            font-size: 0.82rem;
+            font-weight: 400;
+            line-height: 1.35;
+            color: var(--text);
+        }
+
+        .doc-footer {
+            margin-top: auto;
+            padding-top: 1.25rem;
+            padding-bottom: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 1.5rem;
+        }
+
+        .doc-footer-place {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .doc-signature {
+            text-align: center;
+            max-width: 280px;
+            line-height: 1.3;
+        }
+
+        .doc-signature .sig-company {
+            margin: 0;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text);
+        }
+
+        .doc-signature .sig-activity {
+            margin: 0.15rem 0 0.35rem;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--brand);
+        }
+
+        .doc-signature .sig-image-wrap {
+            width: 260px;
+            height: 95px;
+            margin: 0.25rem auto 0.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .doc-signature .sig-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+        }
+
+        .doc-signature .sig-caption {
+            margin: 0;
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.35;
+        }
+
+        body.pdf-export {
+            background: #fff;
+            padding: 0;
+        }
+
+        body.pdf-export .print-toolbar {
+            display: none !important;
+        }
+
+        body.pdf-export .print-pages {
+            gap: 0;
+        }
+
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .print-toolbar {
+                display: none !important;
+            }
+
+            .print-pages {
+                gap: 0;
+            }
+
+            .a4-page {
+                margin: 0;
+                box-shadow: none;
+                page-break-after: always;
+            }
+
+            .a4-page:last-child {
+                page-break-after: auto;
+            }
+
+            .top-bar,
+            .bottom-bar,
+            .doc-title,
+            .dop-mark,
+            .value,
+            .brand-header,
+            .page-watermark {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body{% if pdf_mode %} class="pdf-export"{% endif %}>
+{% if not pdf_mode %}
+<div class="print-toolbar">
+    <button type="button" class="btn btn-primary" onclick="window.print()">Εκτύπωση</button>
+    <button type="button" class="btn btn-close" onclick="closePrintPage()">Κλείσιμο</button>
+</div>
+{% endif %}
+
+<div class="print-pages">
+    <div class="a4-page">
+        <div class="a4-page-body">
+            {% if dop_settings.logo and dop_settings.logo_as_watermark %}
+            <div class="page-watermark" aria-hidden="true">
+                <img src="{{ request.scheme }}://{{ request.get_host }}{{ dop_settings.logo.url }}"
+                     alt="">
+            </div>
+            {% endif %}
+
+            <div class="top-bar">www.tasosxristodoulopoulosglass.gr</div>
+
+            <header class="brand-header">
+                <div class="dop-logo-wrap">
+                    {% if dop_settings.logo %}
+                    <img src="{{ request.scheme }}://{{ request.get_host }}{{ dop_settings.logo.url }}"
+                         alt="Λογότυπο"
+                         class="dop-logo">
+                    {% endif %}
+                </div>
+                <div class="brand-info">
+                    <p class="company-name">Χριστοδουλόπουλος Γ. Αναστάσιος</p>
+                    <p class="company-activity">Επεξεργασία - Εμπορία Υαλοπινάκων</p>
+                    <p class="company-meta">
+                        Ελ. Βενιζέλου 40, Αμαλιάδα<br>
+                        Τηλ. 26220 28686 · Κιν. 6977 240040<br>
+                        Email: info@tasosxristodoulopoulosglass.gr<br>
+                        ΑΦΜ: 043758710 · ΔΟΥ: Αμαλιάδας
+                    </p>
+                </div>
+            </header>
+
+            <div class="doc-title-wrap">
+                <h1 class="doc-title">Δήλωση Απόδοσης</h1>
+                <div><span class="dop-mark">DOP</span></div>
+            </div>
+
+            <div class="sections">
+                <section class="section">
+                    <p class="section-label">1. Μοναδικός κωδικός ταυτοποίησης προϊόντος</p>
+                    <div class="value">{{ dop.get_identification_line }}</div>
+                </section>
+
+                <section class="section">
+                    <p class="section-label">
+                        2. Αριθμός τύπου, παρτίδας ή σειράς ή οποιοδήποτε άλλο στοιχείο επιτρέπει την ταυτοποίηση
+                        του προϊόντος του τομέα των δομικών κατασκευών, όπως προβλέπει
+                    </p>
+                </section>
+
+                <section class="section">
+                    <p class="section-label">
+                        3. Προτεινόμενη χρήση ή χρήσεις του προϊόντος του τομέα δομικών κατασκευών, σύμφωνα με την
+                        ισχύουσα εναρμονισμένη τεχνική προδιαγραφή, όπως προβλέπεται από τον κατασκευαστή:
+                    </p>
+                    <div class="value">{{ intended_use }}</div>
+                </section>
+
+                <section class="section">
+                    <p class="section-label">
+                        4. Όνομα, εμπορική επωνυμία ή κατατεθέν σήμα και διεύθυνση επικοινωνίας του κατασκευαστή,
+                        όπως προβλέπεται στο άρθρο 11, παράγραφος 5:
+                    </p>
+                    <div class="value">{{ manufacturer }}</div>
+                </section>
+
+                <section class="section">
+                    <p class="section-label">
+                        5. Όπου εφαρμόζεται, όνομα και διεύθυνση επικοινωνίας του εξουσιοδοτημένου αντιπροσώπου,
+                        η εντολή του οποίου καλύπτει τα καθήκοντα που προβλέπονται στο άρθρο 12 παρ. 2:
+                    </p>
+                    <div class="value">{{ authorized_representative }}</div>
+                </section>
+
+                <section class="section">
+                    <p class="section-label">
+                        6. Σύστημα ή συστήματα αξιολόγησης και επαλήθευσης της σταθερότητας της απόδοσης του προϊόντος
+                        του τομέα των δομικών κατασκευών όπως καθορίζεται στο παράρτημα V:
+                    </p>
+                    <div class="value">{{ avcp_system }}</div>
+                </section>
+
+                <section class="section">
+                    <p class="section-label">
+                        7. Σε περίπτωση δήλωσης απόδοσης σχετικά με προϊόν του τομέα δομικών κατασκευών που καλύπτεται
+                        από εναρμονισμένο πρότυπο:
+                    </p>
+                    <div class="value">{{ harmonised_standard }}</div>
+                </section>
+
+                <section class="section">
+                    <p class="section-label">
+                        8. Σε περίπτωση δήλωσης απόδοσης σχετικά με προϊόν του τομέα δομικών κατασκευών για το οποίο
+                        έχει εκδοθεί ευρωπαϊκή τεχνική αξιολόγηση:
+                    </p>
+                    <div class="value">{{ european_technical_assessment }}</div>
+                </section>
+            </div>
+
+            <div class="doc-footer">
+                <div class="doc-footer-place">
+                    Αμαλιάδα {{ dop.created_at|date:"d/m/Y" }}
+                </div>
+                <div class="doc-signature">
+                    <p class="sig-company">Χριστοδουλόπουλος Γ. Αναστάσιος</p>
+                    <p class="sig-activity">Επεξεργασία - Εμπορία Υαλοπινάκων</p>
+                    <div class="sig-image-wrap">
+                        {% if dop_settings.signature %}
+                        <img src="{{ request.scheme }}://{{ request.get_host }}{{ dop_settings.signature.url }}"
+                             alt="Υπογραφή"
+                             class="sig-image">
+                        {% endif %}
+                    </div>
+                    <p class="sig-caption">Ονοματεπώνυμο και Ιδιότητα</p>
+                    <p class="sig-caption">Υπογραφή</p>
+                </div>
+            </div>
+
+            <div class="bottom-bar" aria-hidden="true"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+function closePrintPage() {
+    window.close();
+    setTimeout(function() {
+        window.location.href = "{% url 'documents:dop_list' %}";
+    }, 150);
+}
+</script>
+</body>
+</html>

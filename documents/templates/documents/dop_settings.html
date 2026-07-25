@@ -1,0 +1,346 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Ρυθμίσεις Δηλώσης Απόδοσης{% endblock %}
+
+{% block content %}
+<style>.content-wrapper { border: none !important; }</style>
+
+<div class="page-header">
+    <h1><i class="fas fa-cog"></i> Ρυθμίσεις Εντύπου Δήλωσης Απόδοσης</h1>
+    <a href="{% url 'documents:dop_list' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Επιστροφή
+    </a>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="settings-form" id="dopSettingsForm">
+    {% csrf_token %}
+
+    <div class="settings-accordion contact-accordion" id="logoSettingsAccordion">
+        <button type="button"
+                class="contact-accordion-toggle"
+                id="logoSettingsAccordionToggle"
+                aria-expanded="false"
+                aria-controls="logoSettingsAccordionPanel">
+            <span class="contact-accordion-title">
+                <i class="fas fa-image"></i> Λογότυπο εντύπου
+            </span>
+            <i class="fas fa-chevron-down contact-accordion-icon" aria-hidden="true"></i>
+        </button>
+        <div class="contact-accordion-panel" id="logoSettingsAccordionPanel" hidden>
+            <p class="settings-description">
+                Το λογότυπο εμφανίζεται πάνω αριστερά στην εκτύπωση της δήλωσης απόδοσης.
+            </p>
+
+            {% if settings.logo %}
+            <div class="logo-preview">
+                <img src="{{ settings.logo.url }}" alt="Τρέχον λογότυπο">
+            </div>
+            {% endif %}
+
+            <div class="form-group file-field">
+                <label for="{{ form.logo.id_for_label }}">{{ form.logo.label }}</label>
+                {{ form.logo }}
+                {% if form.logo.errors %}
+                <div class="error-message">{{ form.logo.errors.0 }}</div>
+                {% endif %}
+                <p class="field-hint">PNG, JPG ή WEBP · μέγιστο 2 MB</p>
+            </div>
+
+            <label class="watermark-option" for="{{ form.logo_as_watermark.id_for_label }}">
+                {{ form.logo_as_watermark }}
+                <span>
+                    <strong>{{ form.logo_as_watermark.label }}</strong>
+                    <small>Όταν είναι ενεργό, το λογότυπο εμφανίζεται αχνά στο φόντο της σελίδας εκτύπωσης.</small>
+                </span>
+            </label>
+            {% if form.logo_as_watermark.errors %}
+            <div class="error-message">{{ form.logo_as_watermark.errors.0 }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="settings-accordion contact-accordion" id="signatureSettingsAccordion">
+        <button type="button"
+                class="contact-accordion-toggle"
+                id="signatureSettingsAccordionToggle"
+                aria-expanded="false"
+                aria-controls="signatureSettingsAccordionPanel">
+            <span class="contact-accordion-title">
+                <i class="fas fa-signature"></i> Υπογραφή εντύπου
+            </span>
+            <i class="fas fa-chevron-down contact-accordion-icon" aria-hidden="true"></i>
+        </button>
+        <div class="contact-accordion-panel" id="signatureSettingsAccordionPanel" hidden>
+            <p class="settings-description">
+                Η φωτογραφία υπογραφής εμφανίζεται κάτω δεξιά στην εκτύπωση της δήλωσης απόδοσης.
+            </p>
+
+            {% if settings.signature %}
+            <div class="logo-preview signature-preview">
+                <img src="{{ settings.signature.url }}" alt="Τρέχουσα υπογραφή">
+            </div>
+            {% endif %}
+
+            <div class="form-group file-field">
+                <label for="{{ form.signature.id_for_label }}">{{ form.signature.label }}</label>
+                {{ form.signature }}
+                {% if form.signature.errors %}
+                <div class="error-message">{{ form.signature.errors.0 }}</div>
+                {% endif %}
+                <p class="field-hint">PNG, JPG ή WEBP · μέγιστο 2 MB</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-actions">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Αποθήκευση
+        </button>
+        <a href="{% url 'documents:dop_list' %}" class="btn btn-secondary">Ακύρωση</a>
+    </div>
+</form>
+
+<style>
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    background: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px var(--shadow);
+    flex-wrap: wrap;
+}
+.page-header h1 {
+    margin: 0;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.35rem;
+}
+.settings-accordion {
+    max-width: 640px;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px var(--shadow);
+}
+.contact-accordion-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.contact-accordion {
+    border: 2px solid var(--bg-secondary);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--card-bg);
+}
+.contact-accordion-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s ease;
+}
+.contact-accordion-toggle:hover {
+    background: rgba(59, 130, 246, 0.08);
+}
+.contact-accordion-toggle[aria-expanded="true"] {
+    background: rgba(59, 130, 246, 0.1);
+    border-bottom: 1px solid var(--bg-secondary);
+}
+.contact-accordion-icon {
+    color: var(--text-secondary);
+    transition: transform 0.2s ease;
+}
+.contact-accordion-toggle[aria-expanded="true"] .contact-accordion-icon {
+    transform: rotate(180deg);
+    color: var(--accent);
+}
+.contact-accordion-panel {
+    padding: 1.25rem;
+}
+.settings-description {
+    margin: 0 0 1.25rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+.logo-preview {
+    margin-bottom: 1.25rem;
+    padding: 1rem;
+    border: 1px dashed var(--bg-secondary);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    text-align: center;
+}
+.logo-preview img {
+    max-width: 100%;
+    max-height: 120px;
+    object-fit: contain;
+}
+.signature-preview img {
+    max-height: 100px;
+}
+.form-group {
+    margin-bottom: 0;
+}
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+.file-field .dop-file-widget {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.file-field .current-file {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--bg-secondary);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+.file-field .current-file strong {
+    color: var(--text-primary);
+}
+.file-field .current-file a {
+    color: var(--accent);
+    word-break: break-all;
+    text-decoration: none;
+}
+.file-field .current-file a:hover {
+    text-decoration: underline;
+}
+.file-field .clear-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    cursor: pointer;
+    width: fit-content;
+}
+.file-field .file-input-label {
+    display: block;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+}
+.file-field input[type="file"] {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--bg-secondary);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    box-sizing: border-box;
+    font-size: 0.9375rem;
+}
+.file-field input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+.watermark-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    margin-top: 1.25rem;
+    padding: 0.9rem 1rem;
+    border: 2px solid var(--bg-secondary);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    cursor: pointer;
+}
+.watermark-option input {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-top: 0.15rem;
+    accent-color: var(--accent);
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.watermark-option span {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+.watermark-option strong {
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+}
+.watermark-option small {
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+}
+.field-hint {
+    margin: 0.5rem 0 0;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+.error-message {
+    margin-top: 0.5rem;
+    color: #dc3545;
+    font-size: 0.875rem;
+}
+.settings-actions {
+    max-width: 640px;
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+}
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 0.9375rem;
+}
+.btn-primary { background: var(--accent); color: white; }
+.btn-secondary { background: var(--bg-secondary); color: var(--text-primary); }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function initSettingsAccordion(toggleId, panelId) {
+        const toggle = document.getElementById(toggleId);
+        const panel = document.getElementById(panelId);
+        if (!toggle || !panel) return;
+
+        toggle.addEventListener('click', function() {
+            const isOpen = toggle.getAttribute('aria-expanded') === 'true';
+            toggle.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+            panel.hidden = isOpen;
+        });
+    }
+
+    initSettingsAccordion('logoSettingsAccordionToggle', 'logoSettingsAccordionPanel');
+    initSettingsAccordion('signatureSettingsAccordionToggle', 'signatureSettingsAccordionPanel');
+});
+</script>
+{% endblock %}

@@ -1,0 +1,293 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Διαχείριση Βάσης Δεδομένων{% endblock %}
+
+{% block content %}
+<style>.content-wrapper { border: none !important; }</style>
+
+<div class="page-header">
+    <h1><i class="fas fa-database"></i> Διαχείριση Βάσης Δεδομένων</h1>
+</div>
+
+<div class="titles-grid">
+    <div class="title-card">
+        <div class="title-header">
+            <span class="title-label"><i class="fas fa-save"></i> Δημιουργία Backup</span>
+            <span class="current-value">db_backup_20241201_143022.sqlite3</span>
+        </div>
+        <p class="card-desc">Δημιουργήστε ένα ασφαλές backup της τρέχουσας βάσης δεδομένων με timestamp στο όνομα.</p>
+        <form method="post" action="{% url 'database_backup' %}" class="title-form">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">Δημιουργία Backup</button>
+        </form>
+    </div>
+
+    <div class="title-card">
+        <div class="title-header">
+            <span class="title-label"><i class="fas fa-upload"></i> Επαναφορά από Backup</span>
+        </div>
+        <p class="card-desc">Επιλέξτε ένα αρχείο .sqlite3 για επαναφορά. Αυτόματο backup πριν το restore.</p>
+        <div class="warning-info">
+            <strong>Προσοχή!</strong> Η επαναφορά θα αντικαταστήσει την τρέχουσα βάση δεδομένων.
+        </div>
+        <form method="post" action="{% url 'database_restore' %}" enctype="multipart/form-data" class="title-form">
+            {% csrf_token %}
+            <label for="backup_file">Επιλέξτε αρχείο backup</label>
+            <input type="file" id="backup_file" name="backup_file" accept=".sqlite3" required>
+            <small class="help-text">Μόνο αρχεία .sqlite3 επιτρέπονται</small>
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Είστε σίγουροι ότι θέλετε να επαναφέρετε τη βάση δεδομένων; Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.')">
+                Επαναφορά Βάσης
+            </button>
+        </form>
+    </div>
+
+    <div class="title-card">
+        <div class="title-header">
+            <span class="title-label"><i class="fas fa-trash-alt"></i> Άδειασμα Βάσης</span>
+        </div>
+        <p class="card-desc">Διαγράφει όλα τα δεδομένα της βάσης και όλους τους χρήστες, εκτός από τους superuser λογαριασμούς.</p>
+        <div class="warning-info danger-info">
+            <strong>Προσοχή!</strong> Η ενέργεια είναι μη αναστρέψιμη. Προτείνεται να κάνετε backup πριν προχωρήσετε.
+        </div>
+        <form method="post" action="{% url 'database_empty' %}" class="title-form" id="emptyDbForm">
+            {% csrf_token %}
+            <button type="button" class="btn btn-secondary" id="openEmptyDbModalBtn">
+                Άδειασμα Βάσης
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="db-modal-overlay" id="emptyDbModal" hidden>
+    <div class="db-modal" role="alertdialog" aria-labelledby="emptyDbModalTitle" aria-modal="true">
+        <div class="db-modal-header">
+            <h3 id="emptyDbModalTitle">Επιβεβαίωση άδειασματος</h3>
+            <button type="button" class="db-modal-close" id="closeEmptyDbModalBtn" aria-label="Κλείσιμο">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <p class="db-modal-body">
+            Είστε απόλυτα σίγουροι ότι θέλετε να αδειάσετε τη βάση;
+            Θα διαγραφούν <strong>όλα</strong> τα δεδομένα και <strong>όλοι</strong> οι χρήστες εκτός από τους superusers.
+            Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.
+        </p>
+        <div class="db-modal-actions">
+            <button type="button" class="btn btn-secondary" id="cancelEmptyDbBtn">Ακύρωση</button>
+            <button type="button" class="btn btn-danger" id="confirmEmptyDbBtn">Ναι, άδειασμα βάσης</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+.page-header h1 {
+    margin: 0;
+    font-size: 1.35rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    color: var(--text-primary);
+}
+.titles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+}
+.title-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: .75rem;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+.title-header {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+.title-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+.current-value {
+    background: var(--bg-secondary, rgba(148,163,184,.12));
+    border: 1px solid var(--card-border);
+    border-radius: .5rem;
+    padding: .75rem 1rem;
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: .875rem;
+    word-break: break-all;
+}
+.card-desc {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: .875rem;
+    line-height: 1.45;
+}
+.warning-info {
+    background: rgba(245, 158, 11, .12);
+    border: 1px solid rgba(245, 158, 11, .35);
+    border-radius: .5rem;
+    padding: .75rem 1rem;
+    font-size: .8125rem;
+    color: var(--text-primary);
+}
+.danger-info {
+    background: rgba(220, 53, 69, .12);
+    border-color: rgba(220, 53, 69, .35);
+}
+.title-form {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    margin-top: auto;
+}
+.title-form label {
+    font-size: .875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+.title-form input[type="file"] {
+    padding: .65rem .75rem;
+    border: 1px solid var(--card-border, #ddd);
+    border-radius: .375rem;
+    font-size: .875rem;
+    background: var(--bg-primary, #fff);
+    color: var(--text-primary, #333);
+}
+.help-text {
+    font-size: .75rem;
+    color: var(--text-secondary);
+}
+.btn {
+    padding: .65rem 1rem;
+    border: none;
+    border-radius: .5rem;
+    font-size: .875rem;
+    cursor: pointer;
+    margin-top: .25rem;
+}
+.btn-primary {
+    background: var(--accent, #007bff);
+    color: #fff;
+}
+.btn-primary:hover {
+    background: var(--accent-hover, #0056b3);
+}
+.btn-danger {
+    background: #dc3545;
+    color: #fff;
+}
+.btn-danger:hover {
+    background: #c0392b;
+}
+.btn-secondary {
+    background: var(--bg-secondary, #6c757d);
+    color: var(--text-primary, #fff);
+}
+.btn-secondary:hover {
+    opacity: .9;
+}
+.db-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 1rem;
+}
+.db-modal-overlay[hidden] {
+    display: none;
+}
+.db-modal {
+    width: 100%;
+    max-width: 440px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: .75rem;
+    padding: 1.25rem 1.5rem 1.5rem;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, .35);
+}
+.db-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.db-modal-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+.db-modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: .25rem;
+}
+.db-modal-body {
+    margin: 0 0 1.25rem;
+    color: var(--text-secondary);
+    font-size: .9rem;
+    line-height: 1.5;
+}
+.db-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: .75rem;
+    flex-wrap: wrap;
+}
+.db-modal-actions .btn {
+    margin-top: 0;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var modal = document.getElementById('emptyDbModal');
+    var form = document.getElementById('emptyDbForm');
+    var openBtn = document.getElementById('openEmptyDbModalBtn');
+    var closeBtn = document.getElementById('closeEmptyDbModalBtn');
+    var cancelBtn = document.getElementById('cancelEmptyDbBtn');
+    var confirmBtn = document.getElementById('confirmEmptyDbBtn');
+
+    function openModal() {
+        modal.hidden = false;
+        confirmBtn.focus();
+    }
+
+    function closeModal() {
+        modal.hidden = true;
+        openBtn.focus();
+    }
+
+    openBtn.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', function (e) {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (!modal.hidden && e.key === 'Escape') closeModal();
+    });
+    confirmBtn.addEventListener('click', function () {
+        form.submit();
+    });
+});
+</script>
+{% endblock %}
