@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EN 1279-5 - {{ doc.document_number }}</title>
+    <style>
+        :root {
+            --brand: #00737a;
+            --brand-dark: #005f65;
+            --fill: #f2f2f2;
+            --line: #c5cdd0;
+            --text: #111;
+            --muted: #444;
+            --table-border: #333;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            background: #e5e7eb;
+            margin: 0;
+            padding: 1.5rem;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .print-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin: 0 auto 1.5rem;
+            max-width: 210mm;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.9375rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            font-family: inherit;
+        }
+
+        .btn-primary { background: var(--brand); color: #fff; }
+        .btn-secondary { background: #e5e7eb; color: #111; border: 1px solid #cbd5e1; }
+        .btn-email { background: #059669; color: #fff; }
+        .btn-pdf { background: #f59e0b; color: #fff; }
+        .btn-close { background: #dc2626; color: #fff; }
+        .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+        .print-messages {
+            max-width: 210mm;
+            margin: 0 auto 1rem;
+        }
+        .print-message {
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+        .print-message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+        }
+        .print-message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        .print-message.warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .email-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+        .email-modal-overlay[hidden] { display: none; }
+        .email-modal {
+            background: #fff;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 480px;
+            padding: 1.25rem 1.5rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+        .email-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+        }
+        .email-modal-header h3 { margin: 0; font-size: 1.1rem; }
+        .email-modal-close {
+            border: none;
+            background: transparent;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: #666;
+            line-height: 1;
+        }
+        .email-modal-description,
+        .email-modal-warning {
+            margin: 0 0 1rem;
+            font-size: 0.875rem;
+            color: #444;
+            line-height: 1.4;
+        }
+        .email-modal-warning { color: #b45309; }
+        .email-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            margin-bottom: 0.9rem;
+        }
+        .email-form-group label {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #111;
+        }
+        .dop-email-input,
+        .dop-email-message {
+            width: 100%;
+            padding: 0.65rem 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        .dop-email-message { resize: vertical; }
+        .email-modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .email-sending-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+        }
+        .email-sending-overlay[hidden] { display: none; }
+        .email-sending-modal {
+            background: #fff;
+            padding: 1.5rem 2rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+        .email-sending-modal p { margin: 0; font-size: 0.95rem; }
+
+        .print-pages {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            align-items: center;
+        }
+
+        .a4-page {
+            width: 210mm;
+            height: 297mm;
+            padding: 0;
+            background: #fff;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .a4-page-body {
+            flex: 1;
+            min-height: 0;
+            padding: 0 10mm;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 0;
+        }
+
+        .page-watermark {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.08;
+        }
+        .page-watermark img {
+            max-width: 70%;
+            max-height: 55%;
+            object-fit: contain;
+            display: block;
+        }
+        .a4-page-body > *:not(.page-watermark) {
+            position: relative;
+            z-index: 1;
+        }
+
+        .top-bar {
+            background: var(--brand);
+            color: #fff;
+            font-size: 0.7rem;
+            letter-spacing: 0.04em;
+            padding: 0.35rem 10mm;
+            margin: 0 -10mm 0.7rem;
+            width: calc(100% + 20mm);
+        }
+
+        .bottom-bar {
+            background: var(--brand);
+            height: 23px;
+            margin: 0.6rem -10mm 0;
+            width: calc(100% + 20mm);
+            flex-shrink: 0;
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 0.7rem;
+            padding-bottom: 0.55rem;
+            border-bottom: 2px solid var(--brand);
+        }
+
+        .dop-logo {
+            max-width: 180px;
+            max-height: 80px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .brand-info { text-align: right; line-height: 1.35; }
+        .brand-info .company-name {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .brand-info .company-activity {
+            margin: 0.1rem 0 0.3rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--brand);
+            text-transform: uppercase;
+        }
+        .brand-info .company-meta {
+            margin: 0;
+            font-size: 0.68rem;
+            color: var(--muted);
+            line-height: 1.35;
+        }
+
+        .en-std-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 0.55rem;
+        }
+        .en-std-label {
+            margin: 0;
+            font-size: 0.72rem;
+            font-weight: 700;
+            line-height: 1.35;
+            flex: 1;
+        }
+        .en-std-box {
+            flex-shrink: 0;
+            border: 2px solid #111;
+            padding: 0.25rem 0.65rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            line-height: 1.2;
+        }
+
+        .en-block { margin-bottom: 0.55rem; }
+        .en-block-label {
+            margin: 0 0 0.2rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+        .en-block-value {
+            margin: 0;
+            font-size: 0.72rem;
+            line-height: 1.4;
+            color: var(--text);
+        }
+        .en-block-value.filled {
+            display: block;
+            width: 100%;
+            min-height: 1.45em;
+            padding: 0.3rem 0.5rem;
+            background: var(--fill);
+            border: 1px solid var(--line);
+            border-left: 3px solid var(--brand);
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .en-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            font-size: 0.62rem;
+            line-height: 1.25;
+            margin-top: 0.35rem;
+        }
+        .en-table th,
+        .en-table td {
+            border: 1px solid var(--table-border);
+            padding: 0.22rem 0.28rem;
+            vertical-align: middle;
+            color: var(--text);
+        }
+        .en-table thead th {
+            background: #f7f7f7;
+            font-weight: 700;
+            text-align: center;
+            font-size: 0.58rem;
+            line-height: 1.2;
+        }
+        .en-table .col-num { width: 5%; text-align: center; font-weight: 700; }
+        .en-table .col-char { width: 42%; text-align: left; }
+        .en-table .col-spec { width: 18%; text-align: center; }
+        .en-table .col-unit { width: 15%; text-align: center; }
+        .en-table .col-perf {
+            width: 20%;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.72rem;
+        }
+        .en-table .perf-input {
+            background: var(--fill);
+            font-weight: 700;
+            font-size: 0.78rem;
+        }
+
+        .en-npd-note {
+            margin: 0.55rem 0 0;
+            font-size: 0.68rem;
+            font-weight: 700;
+        }
+
+        .doc-footer {
+            margin-top: auto;
+            padding-top: 0.75rem;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: flex-end;
+            gap: 0.75rem;
+        }
+        .doc-footer-place {
+            font-size: 0.8rem;
+            font-weight: 700;
+            justify-self: start;
+        }
+        .doc-ce-mark {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            justify-self: center;
+        }
+        .doc-ce-mark img {
+            max-width: 75px;
+            max-height: 60px;
+            object-fit: contain;
+            display: block;
+        }
+        .doc-signature {
+            text-align: center;
+            max-width: 260px;
+            line-height: 1.3;
+            justify-self: end;
+        }
+        .doc-signature .sig-company {
+            margin: 0;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .doc-signature .sig-activity {
+            margin: 0.1rem 0 0.25rem;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--brand);
+        }
+        .doc-signature .sig-image-wrap {
+            width: 230px;
+            height: 80px;
+            margin: 0.2rem auto 0.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .doc-signature .sig-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+        }
+        .doc-signature .sig-caption {
+            margin: 0;
+            font-size: 0.62rem;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        body.pdf-export {
+            background: #fff;
+            padding: 0;
+        }
+        body.pdf-export .print-toolbar,
+        body.pdf-export .print-messages,
+        body.pdf-export .email-modal-overlay,
+        body.pdf-export .email-sending-overlay {
+            display: none !important;
+        }
+        body.pdf-export .print-pages { gap: 0; }
+
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+            .print-toolbar,
+            .print-messages,
+            .email-modal-overlay,
+            .email-sending-overlay {
+                display: none !important;
+            }
+            .print-pages { gap: 0; }
+            .a4-page {
+                margin: 0;
+                box-shadow: none;
+                page-break-after: always;
+            }
+            .a4-page:last-child { page-break-after: auto; }
+            .top-bar,
+            .bottom-bar,
+            .page-watermark,
+            .en-block-value.filled,
+            .en-table .perf-input,
+            .en-table thead th {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body{% if pdf_mode %} class="pdf-export"{% endif %}>
+{% if not pdf_mode %}
+{% if messages %}
+<div class="print-messages">
+    {% for message in messages %}
+    <div class="print-message {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="print-toolbar">
+    <button type="button" class="btn btn-primary" onclick="window.print()">Εκτύπωση</button>
+    <button type="button"
+            class="btn btn-email"
+            id="openDopEmailModal"
+            {% if not email_configured %}disabled title="Οι ρυθμίσεις email δεν έχουν ολοκληρωθεί"{% endif %}>
+        Αποστολή σε email
+    </button>
+    <a class="btn btn-pdf"
+       id="dopPdfBtn"
+       href="{% url 'documents:en1279_pdf' doc.pk %}"
+       data-filename="en1279-5-{{ doc.document_number }}.pdf">
+        Λήψη αρχείου προσφοράς
+    </a>
+    <button type="button" class="btn btn-close" onclick="closePrintPage()">Κλείσιμο</button>
+</div>
+
+<div class="email-modal-overlay" id="dopEmailModal" hidden>
+    <div class="email-modal" role="dialog" aria-labelledby="dopEmailModalTitle" aria-modal="true">
+        <div class="email-modal-header">
+            <h3 id="dopEmailModalTitle">Αποστολή σε Email</h3>
+            <button type="button" class="email-modal-close" id="closeDopEmailModal" aria-label="Κλείσιμο">&times;</button>
+        </div>
+        {% if not email_configured %}
+        <p class="email-modal-warning">
+            Οι ρυθμίσεις email δεν έχουν ολοκληρωθεί. Ρυθμίστε τον SMTP από τις ρυθμίσεις συστήματος.
+        </p>
+        {% else %}
+        <p class="email-modal-description">
+            Συμπλήρωσε το email παραλήπτη και προαιρετικά ένα μήνυμα. Θα σταλεί PDF του εντύπου EN 1279-5.
+        </p>
+        <form method="post" action="{% url 'documents:en1279_email' doc.pk %}" id="dopEmailForm">
+            {% csrf_token %}
+            <div class="email-form-group">
+                <label for="{{ email_form.email.id_for_label }}">{{ email_form.email.label }}</label>
+                {{ email_form.email }}
+            </div>
+            <div class="email-form-group">
+                <label for="{{ email_form.message.id_for_label }}">{{ email_form.message.label }}</label>
+                {{ email_form.message }}
+            </div>
+            <div class="email-modal-actions">
+                <button type="button" class="btn btn-secondary" id="cancelDopEmailModal">Ακύρωση</button>
+                <button type="submit" class="btn btn-email" id="dopEmailSubmitBtn">Αποστολή</button>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="email-sending-overlay" id="emailSendingOverlay" hidden aria-live="polite" aria-busy="true">
+    <div class="email-sending-modal">
+        <p>Παρακαλώ περιμένετε, γίνεται αποστολή...</p>
+    </div>
+</div>
+{% endif %}
+
+<div class="print-pages">
+    <div class="a4-page">
+        <div class="a4-page-body">
+            {% if en_settings.logo and en_settings.logo_as_watermark %}
+            <div class="page-watermark" aria-hidden="true">
+                <img src="{{ request.scheme }}://{{ request.get_host }}{{ en_settings.logo.url }}"
+                     alt="">
+            </div>
+            {% endif %}
+
+            <div class="top-bar">www.tasosxristodoulopoulosglass.gr</div>
+
+            <header class="brand-header">
+                <div class="dop-logo-wrap">
+                    {% if en_settings.logo %}
+                    <img src="{{ request.scheme }}://{{ request.get_host }}{{ en_settings.logo.url }}"
+                         alt="Λογότυπο"
+                         class="dop-logo">
+                    {% endif %}
+                </div>
+                <div class="brand-info">
+                    <p class="company-name">{{ en_settings.header_company_name }}</p>
+                    <p class="company-activity">{{ en_settings.header_company_activity }}</p>
+                    <p class="company-meta">{{ en_settings.header_company_details|linebreaksbr }}</p>
+                </div>
+            </header>
+
+            <div class="en-std-row">
+                <p class="en-std-label">{{ en_settings.standard_intro|linebreaksbr }}</p>
+                <div class="en-std-box">{{ en_settings.standard_code }}</div>
+            </div>
+
+            <div class="en-block">
+                <p class="en-block-label">{{ en_settings.product_name_label|linebreaksbr }}</p>
+                <p class="en-block-value">{{ en_settings.product_name_value|linebreaksbr }}</p>
+            </div>
+
+            <div class="en-block">
+                <p class="en-block-label">{{ en_settings.designation_label|linebreaksbr }}</p>
+                <div class="en-block-value filled">{{ doc.product_designation }}</div>
+            </div>
+
+            <table class="en-table">
+                <thead>
+                    <tr>
+                        <th class="col-num">#</th>
+                        <th class="col-char">{{ en_settings.col_characteristic }}</th>
+                        <th class="col-spec">{{ en_settings.col_spec }}</th>
+                        <th class="col-unit">{{ en_settings.col_units }}</th>
+                        <th class="col-perf">{{ en_settings.col_performance }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in table_rows %}
+                    <tr>
+                        <td class="col-num">{{ row.num }}</td>
+                        <td class="col-char">{{ row.characteristic }}</td>
+                        <td class="col-spec">{{ row.spec }}</td>
+                        <td class="col-unit">{{ row.units }}</td>
+                        <td class="col-perf{% if row.is_input %} perf-input{% endif %}">{{ row.performance }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <p class="en-npd-note">{{ en_settings.npd_note }}</p>
+
+            <div class="doc-footer">
+                <div class="doc-footer-place">
+                    Αμαλιάδα {{ doc.created_at|date:"d/m/Y" }}
+                </div>
+                <div class="doc-ce-mark">
+                    {% if en_settings.ce_mark %}
+                    <img src="{{ request.scheme }}://{{ request.get_host }}{{ en_settings.ce_mark.url }}"
+                         alt="CE">
+                    {% endif %}
+                </div>
+                <div class="doc-signature">
+                    <p class="sig-company">Χριστοδουλόπουλος Γ. Αναστάσιος</p>
+                    <p class="sig-activity">Επεξεργασία - Εμπορία Υαλοπινάκων</p>
+                    <div class="sig-image-wrap">
+                        {% if doc.show_signature %}
+                            {% if en_settings.signature %}
+                            <img src="{{ request.scheme }}://{{ request.get_host }}{{ en_settings.signature.url }}"
+                                 alt="Υπογραφή"
+                                 class="sig-image">
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    <p class="sig-caption">Ονοματεπώνυμο και Ιδιότητα</p>
+                    <p class="sig-caption">Υπογραφή</p>
+                </div>
+            </div>
+
+            <div class="bottom-bar" aria-hidden="true"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+function closePrintPage() {
+    window.close();
+    setTimeout(function() {
+        window.location.href = "{% url 'documents:en1279_list' %}";
+    }, 150);
+}
+
+(function() {
+    var openBtn = document.getElementById('openDopEmailModal');
+    var modal = document.getElementById('dopEmailModal');
+    var closeBtn = document.getElementById('closeDopEmailModal');
+    var cancelBtn = document.getElementById('cancelDopEmailModal');
+    var form = document.getElementById('dopEmailForm');
+    var overlay = document.getElementById('emailSendingOverlay');
+    var submitBtn = document.getElementById('dopEmailSubmitBtn');
+
+    function openModal() {
+        if (!modal) return;
+        modal.hidden = false;
+        var emailInput = document.getElementById('id_dop_email');
+        if (emailInput) emailInput.focus();
+    }
+
+    function closeModal() {
+        if (!modal) return;
+        modal.hidden = true;
+    }
+
+    if (openBtn) openBtn.addEventListener('click', openModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    if (modal) {
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) closeModal();
+        });
+    }
+
+    if (form) {
+        form.addEventListener('submit', function() {
+            if (overlay) overlay.hidden = false;
+            if (submitBtn) submitBtn.disabled = true;
+        });
+    }
+
+    var dopPdfBtn = document.getElementById('dopPdfBtn');
+    if (dopPdfBtn) {
+        dopPdfBtn.addEventListener('click', async function(event) {
+            var url = dopPdfBtn.getAttribute('href');
+            var suggestedName = dopPdfBtn.dataset.filename || 'en1279-5.pdf';
+            if (!url) return;
+
+            if (!window.showSaveFilePicker) {
+                return;
+            }
+
+            event.preventDefault();
+
+            try {
+                var response = await fetch(url, { credentials: 'same-origin' });
+                if (!response.ok) {
+                    throw new Error('Αποτυχία λήψης PDF.');
+                }
+                var blob = await response.blob();
+
+                var handle = await window.showSaveFilePicker({
+                    suggestedName: suggestedName,
+                    types: [{
+                        description: 'PDF',
+                        accept: { 'application/pdf': ['.pdf'] },
+                    }],
+                });
+
+                var writable = await handle.createWritable();
+                await writable.write(blob);
+                await writable.close();
+            } catch (err) {
+                if (err && (err.name === 'AbortError' || err.name === 'NotAllowedError')) {
+                    return;
+                }
+                window.location.href = url;
+            }
+        });
+    }
+})();
+</script>
+</body>
+</html>

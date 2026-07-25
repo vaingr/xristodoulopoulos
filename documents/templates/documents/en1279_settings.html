@@ -1,0 +1,598 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Ρυθμίσεις EN 1279-5{% endblock %}
+
+{% block content %}
+<style>.content-wrapper { border: none !important; }</style>
+
+<div class="page-header">
+    <h1><i class="fas fa-cog"></i> Ρυθμίσεις Εντύπου EN 1279-5</h1>
+    <a href="{% url 'documents:en1279_list' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Επιστροφή
+    </a>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="settings-form" id="en1279SettingsForm">
+    {% csrf_token %}
+
+    <div class="settings-accordion contact-accordion" id="logoSettingsAccordion">
+        <button type="button"
+                class="contact-accordion-toggle"
+                id="logoSettingsAccordionToggle"
+                aria-expanded="false"
+                aria-controls="logoSettingsAccordionPanel">
+            <span class="contact-accordion-title">
+                <i class="fas fa-image"></i> Λογότυπο εντύπου
+            </span>
+            <i class="fas fa-chevron-down contact-accordion-icon" aria-hidden="true"></i>
+        </button>
+        <div class="contact-accordion-panel" id="logoSettingsAccordionPanel" hidden>
+            <p class="settings-description">
+                Το λογότυπο εμφανίζεται πάνω αριστερά στην εκτύπωση του εντύπου EN 1279-5.
+            </p>
+
+            {% if settings.logo %}
+            <div class="logo-preview">
+                <img src="{{ settings.logo.url }}" alt="Τρέχον λογότυπο">
+            </div>
+            {% endif %}
+
+            <div class="form-group file-field">
+                <label for="{{ form.logo.id_for_label }}">{{ form.logo.label }}</label>
+                {{ form.logo }}
+                {% if form.logo.errors %}
+                <div class="error-message">{{ form.logo.errors.0 }}</div>
+                {% endif %}
+                <p class="field-hint">PNG, JPG ή WEBP · μέγιστο 2 MB</p>
+            </div>
+
+            <label class="watermark-option" for="{{ form.logo_as_watermark.id_for_label }}">
+                {{ form.logo_as_watermark }}
+                <span>
+                    <strong>{{ form.logo_as_watermark.label }}</strong>
+                    <small>Όταν είναι ενεργό, το λογότυπο εμφανίζεται αχνά στο φόντο της σελίδας εκτύπωσης.</small>
+                </span>
+            </label>
+            {% if form.logo_as_watermark.errors %}
+            <div class="error-message">{{ form.logo_as_watermark.errors.0 }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="settings-accordion contact-accordion" id="signatureSettingsAccordion">
+        <button type="button"
+                class="contact-accordion-toggle"
+                id="signatureSettingsAccordionToggle"
+                aria-expanded="false"
+                aria-controls="signatureSettingsAccordionPanel">
+            <span class="contact-accordion-title">
+                <i class="fas fa-signature"></i> Υπογραφή εντύπου
+            </span>
+            <i class="fas fa-chevron-down contact-accordion-icon" aria-hidden="true"></i>
+        </button>
+        <div class="contact-accordion-panel" id="signatureSettingsAccordionPanel" hidden>
+            <p class="settings-description">
+                Η φωτογραφία υπογραφής εμφανίζεται κάτω δεξιά στην εκτύπωση του εντύπου EN 1279-5.
+            </p>
+
+            {% if settings.signature %}
+            <div class="logo-preview signature-preview">
+                <img src="{{ settings.signature.url }}" alt="Τρέχουσα υπογραφή">
+            </div>
+            {% endif %}
+
+            <div class="form-group file-field">
+                <label for="{{ form.signature.id_for_label }}">{{ form.signature.label }}</label>
+                {{ form.signature }}
+                {% if form.signature.errors %}
+                <div class="error-message">{{ form.signature.errors.0 }}</div>
+                {% endif %}
+                <p class="field-hint">PNG, JPG ή WEBP · μέγιστο 2 MB</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-accordion contact-accordion" id="ceSettingsAccordion">
+        <button type="button"
+                class="contact-accordion-toggle"
+                id="ceSettingsAccordionToggle"
+                aria-expanded="false"
+                aria-controls="ceSettingsAccordionPanel">
+            <span class="contact-accordion-title">
+                <i class="fas fa-certificate"></i> Σήμανση CE
+            </span>
+            <i class="fas fa-chevron-down contact-accordion-icon" aria-hidden="true"></i>
+        </button>
+        <div class="contact-accordion-panel" id="ceSettingsAccordionPanel" hidden>
+            <p class="settings-description">
+                Η εικόνα CE εμφανίζεται κάτω στο έντυπο, ανάμεσα στην ημερομηνία και την υπογραφή.
+            </p>
+
+            {% if settings.ce_mark %}
+            <div class="logo-preview ce-preview">
+                <img src="{{ settings.ce_mark.url }}" alt="Τρέχουσα σήμανση CE">
+            </div>
+            {% endif %}
+
+            <div class="form-group file-field">
+                <label for="{{ form.ce_mark.id_for_label }}">{{ form.ce_mark.label }}</label>
+                {{ form.ce_mark }}
+                {% if form.ce_mark.errors %}
+                <div class="error-message">{{ form.ce_mark.errors.0 }}</div>
+                {% endif %}
+                <p class="field-hint">PNG, JPG ή WEBP · μέγιστο 2 MB</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-accordion contact-accordion" id="textsSettingsAccordion">
+        <button type="button"
+                class="contact-accordion-toggle"
+                id="textsSettingsAccordionToggle"
+                aria-expanded="false"
+                aria-controls="textsSettingsAccordionPanel">
+            <span class="contact-accordion-title">
+                <i class="fas fa-font"></i> Κείμενα εντύπου
+            </span>
+            <i class="fas fa-chevron-down contact-accordion-icon" aria-hidden="true"></i>
+        </button>
+        <div class="contact-accordion-panel" id="textsSettingsAccordionPanel" hidden>
+            <p class="settings-description">
+                Επεξεργασία σταθερών κειμένων που εμφανίζονται στο έντυπο EN 1279-5.
+                Οι αποδόσεις των γραμμών 11–13 συμπληρώνονται ανά έντυπο κατά την καταχώρηση.
+            </p>
+
+            <h3 class="texts-section-title">Κείμενο Κεφαλίδας</h3>
+            <p class="settings-description texts-section-hint">
+                Εμφανίζεται πάνω δεξιά στην εκτύπωση, δίπλα στο λογότυπο.
+            </p>
+            <div class="texts-fields">
+                <div class="form-group">
+                    <label for="{{ form.header_company_name.id_for_label }}">{{ form.header_company_name.label }}</label>
+                    {{ form.header_company_name }}
+                    {% if form.header_company_name.errors %}
+                    <div class="error-message">{{ form.header_company_name.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.header_company_activity.id_for_label }}">{{ form.header_company_activity.label }}</label>
+                    {{ form.header_company_activity }}
+                    {% if form.header_company_activity.errors %}
+                    <div class="error-message">{{ form.header_company_activity.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.header_company_details.id_for_label }}">{{ form.header_company_details.label }}</label>
+                    {{ form.header_company_details }}
+                    {% if form.header_company_details.errors %}
+                    <div class="error-message">{{ form.header_company_details.errors.0 }}</div>
+                    {% endif %}
+                    <p class="field-hint">Κάθε γραμμή εμφανίζεται ξεχωριστά κάτω από τη δραστηριότητα.</p>
+                </div>
+            </div>
+
+            <h3 class="texts-section-title">Πρότυπο &amp; περιγραφή προϊόντος</h3>
+            <div class="texts-fields">
+                <div class="form-group">
+                    <label for="{{ form.standard_intro.id_for_label }}">{{ form.standard_intro.label }}</label>
+                    {{ form.standard_intro }}
+                    {% if form.standard_intro.errors %}
+                    <div class="error-message">{{ form.standard_intro.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.standard_code.id_for_label }}">{{ form.standard_code.label }}</label>
+                    {{ form.standard_code }}
+                    {% if form.standard_code.errors %}
+                    <div class="error-message">{{ form.standard_code.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.product_name_label.id_for_label }}">Περιγραφή προϊόντος — {{ form.product_name_label.label }}</label>
+                    {{ form.product_name_label }}
+                    {% if form.product_name_label.errors %}
+                    <div class="error-message">{{ form.product_name_label.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.product_name_value.id_for_label }}">Περιγραφή προϊόντος — {{ form.product_name_value.label }}</label>
+                    {{ form.product_name_value }}
+                    {% if form.product_name_value.errors %}
+                    <div class="error-message">{{ form.product_name_value.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.designation_label.id_for_label }}">{{ form.designation_label.label }}</label>
+                    {{ form.designation_label }}
+                    {% if form.designation_label.errors %}
+                    <div class="error-message">{{ form.designation_label.errors.0 }}</div>
+                    {% endif %}
+                    <p class="field-hint">Η τιμή συμπληρώνεται ανά έντυπο (τύπος προϊόντος).</p>
+                </div>
+            </div>
+
+            <h3 class="texts-section-title">Επικεφαλίδες πίνακα</h3>
+            <div class="texts-fields">
+                <div class="form-group">
+                    <label for="{{ form.col_characteristic.id_for_label }}">{{ form.col_characteristic.label }}</label>
+                    {{ form.col_characteristic }}
+                    {% if form.col_characteristic.errors %}
+                    <div class="error-message">{{ form.col_characteristic.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.col_spec.id_for_label }}">{{ form.col_spec.label }}</label>
+                    {{ form.col_spec }}
+                    {% if form.col_spec.errors %}
+                    <div class="error-message">{{ form.col_spec.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.col_units.id_for_label }}">{{ form.col_units.label }}</label>
+                    {{ form.col_units }}
+                    {% if form.col_units.errors %}
+                    <div class="error-message">{{ form.col_units.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.col_performance.id_for_label }}">{{ form.col_performance.label }}</label>
+                    {{ form.col_performance }}
+                    {% if form.col_performance.errors %}
+                    <div class="error-message">{{ form.col_performance.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.npd_note.id_for_label }}">{{ form.npd_note.label }}</label>
+                    {{ form.npd_note }}
+                    {% if form.npd_note.errors %}
+                    <div class="error-message">{{ form.npd_note.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% for row in row_forms %}
+            <h3 class="texts-section-title">Γραμμή {{ row.num }}</h3>
+            {% if row.is_input_row %}
+            <p class="settings-description texts-section-hint">
+                Η τιμή απόδοσης συμπληρώνεται χειροκίνητα σε κάθε νέο έντυπο.
+            </p>
+            {% endif %}
+            <div class="texts-fields">
+                <div class="form-group">
+                    <label for="{{ row.characteristic.id_for_label }}">{{ row.characteristic.label }}</label>
+                    {{ row.characteristic }}
+                    {% if row.characteristic.errors %}
+                    <div class="error-message">{{ row.characteristic.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group form-row-2{% if not row.performance %} form-row-2-narrow{% endif %}">
+                    <div>
+                        <label for="{{ row.spec.id_for_label }}">{{ row.spec.label }}</label>
+                        {{ row.spec }}
+                        {% if row.spec.errors %}
+                        <div class="error-message">{{ row.spec.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label for="{{ row.units.id_for_label }}">{{ row.units.label }}</label>
+                        {{ row.units }}
+                        {% if row.units.errors %}
+                        <div class="error-message">{{ row.units.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    {% if row.performance %}
+                    <div>
+                        <label for="{{ row.performance.id_for_label }}">{{ row.performance.label }}</label>
+                        {{ row.performance }}
+                        {% if row.performance.errors %}
+                        <div class="error-message">{{ row.performance.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="settings-actions">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Αποθήκευση
+        </button>
+        <a href="{% url 'documents:en1279_list' %}" class="btn btn-secondary">Ακύρωση</a>
+    </div>
+</form>
+
+<style>
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    background: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px var(--shadow);
+    flex-wrap: wrap;
+}
+.page-header h1 {
+    margin: 0;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.35rem;
+}
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.settings-accordion {
+    width: 100%;
+    max-width: 920px;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px var(--shadow);
+}
+.contact-accordion-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.contact-accordion {
+    border: 2px solid var(--bg-secondary);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--card-bg);
+}
+.contact-accordion-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s ease;
+}
+.contact-accordion-toggle:hover {
+    background: rgba(59, 130, 246, 0.08);
+}
+.contact-accordion-toggle[aria-expanded="true"] {
+    background: rgba(59, 130, 246, 0.1);
+    border-bottom: 1px solid var(--bg-secondary);
+}
+.contact-accordion-icon {
+    color: var(--text-secondary);
+    transition: transform 0.2s ease;
+}
+.contact-accordion-toggle[aria-expanded="true"] .contact-accordion-icon {
+    transform: rotate(180deg);
+    color: var(--accent);
+}
+.contact-accordion-panel {
+    padding: 1.25rem;
+}
+.settings-description {
+    margin: 0 0 1.25rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+.logo-preview {
+    margin-bottom: 1.25rem;
+    padding: 1rem;
+    border: 1px dashed var(--bg-secondary);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    text-align: center;
+}
+.logo-preview img {
+    max-width: 100%;
+    max-height: 120px;
+    object-fit: contain;
+}
+.signature-preview img { max-height: 100px; }
+.ce-preview img { max-height: 90px; }
+.texts-section-title {
+    margin: 1.5rem 0 0.35rem;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+.texts-section-title:first-of-type { margin-top: 0; }
+.texts-section-hint { margin-bottom: 1rem !important; }
+.texts-fields {
+    display: grid;
+    gap: 1rem;
+}
+.texts-fields .form-group label,
+.form-row-2 label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+.texts-fields .form-control,
+.form-row-2 .form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--bg-secondary);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    box-sizing: border-box;
+    font-size: 0.9375rem;
+    font-family: inherit;
+    resize: vertical;
+}
+.texts-fields .form-control:focus,
+.form-row-2 .form-control:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+.form-row-2 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+.form-row-2-narrow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.form-group { margin-bottom: 0; }
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+.file-field .dop-file-widget {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.file-field .current-file {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--bg-secondary);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+.file-field .current-file strong { color: var(--text-primary); }
+.file-field .current-file a {
+    color: var(--accent);
+    word-break: break-all;
+    text-decoration: none;
+}
+.file-field .current-file a:hover { text-decoration: underline; }
+.file-field .clear-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    cursor: pointer;
+    width: fit-content;
+}
+.file-field .file-input-label {
+    display: block;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+}
+.file-field input[type="file"] {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--bg-secondary);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    box-sizing: border-box;
+    font-size: 0.9375rem;
+}
+.file-field input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+.watermark-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    margin-top: 1.25rem;
+    padding: 0.9rem 1rem;
+    border: 2px solid var(--bg-secondary);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    cursor: pointer;
+}
+.watermark-option input {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-top: 0.15rem;
+    accent-color: var(--accent);
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.watermark-option span {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+.watermark-option strong {
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+}
+.watermark-option small {
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+}
+.field-hint {
+    margin: 0.5rem 0 0;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+.error-message {
+    margin-top: 0.5rem;
+    color: #dc3545;
+    font-size: 0.875rem;
+}
+.settings-actions {
+    width: 100%;
+    max-width: 920px;
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+}
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 0.9375rem;
+}
+.btn-primary { background: var(--accent); color: white; }
+.btn-secondary { background: var(--bg-secondary); color: var(--text-primary); }
+@media (max-width: 720px) {
+    .form-row-2 { grid-template-columns: 1fr; }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function initSettingsAccordion(toggleId, panelId) {
+        const toggle = document.getElementById(toggleId);
+        const panel = document.getElementById(panelId);
+        if (!toggle || !panel) return;
+
+        toggle.addEventListener('click', function() {
+            const isOpen = toggle.getAttribute('aria-expanded') === 'true';
+            toggle.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+            panel.hidden = isOpen;
+        });
+    }
+
+    initSettingsAccordion('logoSettingsAccordionToggle', 'logoSettingsAccordionPanel');
+    initSettingsAccordion('signatureSettingsAccordionToggle', 'signatureSettingsAccordionPanel');
+    initSettingsAccordion('ceSettingsAccordionToggle', 'ceSettingsAccordionPanel');
+    initSettingsAccordion('textsSettingsAccordionToggle', 'textsSettingsAccordionPanel');
+});
+</script>
+{% endblock %}

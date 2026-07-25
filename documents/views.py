@@ -7,9 +7,15 @@ from django.shortcuts import get_object_or_404, redirect, render
 from accounts.module_settings import get_module_flags
 from email_utils import get_email_settings, is_email_configured, send_email_with_attachment
 
-from .forms import DeclarationOfPerformanceForm, DopEmailForm, DopSettingsForm
-from .models import DeclarationOfPerformance, DopSettings
-from .pdf_utils import generate_dop_pdf
+from .forms import (
+    DeclarationOfPerformanceForm,
+    DopEmailForm,
+    DopSettingsForm,
+    En1279DocumentForm,
+    En1279SettingsForm,
+)
+from .models import DeclarationOfPerformance, DopSettings, En1279Document, En1279Settings
+from .pdf_utils import generate_dop_pdf, generate_en1279_pdf
 
 
 def _documents_access_required(view_func):
@@ -229,6 +235,225 @@ def dop_pdf(request, pk):
         return redirect('documents:dop_print', pk=pk)
 
     filename = f'dilosi-apodosis-{dop.document_number}.pdf'
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+def _en1279_print_context(request, doc, pdf_mode=False, email_form=None):
+    en_settings = En1279Settings.get_solo()
+    return {
+        'doc': doc,
+        'en_settings': en_settings,
+        'table_rows': en_settings.get_table_rows(doc),
+        'pdf_mode': pdf_mode,
+        'email_configured': is_email_configured(),
+        'email_form': email_form or DopEmailForm(),
+    }
+
+
+@_documents_access_required
+def en1279_settings(request):
+    settings_obj = En1279Settings.get_solo()
+    if request.method == 'POST':
+        form = En1279SettingsForm(request.POST, request.FILES, instance=settings_obj)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Οι ρυθμίσεις εντύπου EN 1279-5 αποθηκεύτηκαν επιτυχώς.')
+            return redirect('documents:en1279_settings')
+    else:
+        form = En1279SettingsForm(instance=settings_obj)
+
+    row_forms = []
+    for n in range(1, 14):
+        row = {
+            'num': n,
+            'characteristic': form[f'row_{n}_characteristic'],
+            'spec': form[f'row_{n}_spec'],
+            'units': form[f'row_{n}_units'],
+            'performance': form[f'row_{n}_performance'] if n <= 10 else None,
+            'is_input_row': n >= 11,
+        }
+        row_forms.append(row)
+
+    return render(request, 'documents/en1279_settings.html', {
+        'form': form,
+        'settings': settings_obj,
+        'row_forms': row_forms,
+    })
+
+
+@_documents_access_required
+def en1279_list(request):
+    documents = (
+        En1279Document.objects
+        .select_related('created_by')
+        .order_by('-created_at')
+    )
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        documents = documents.filter(
+            Q(document_number__icontains=search_query)
+            | Q(product_designation__icontains=search_query)
+            | Q(thermal_performance__icontains=search_query)
+            | Q(light_performance__icontains=search_query)
+            | Q(energy_performance__icontains=search_query)
+        )
+
+    return render(request, 'documents/en1279_list.html', {
+        'documents': documents,
+        'search_query': search_query,
+    })
+
+
+@_documents_access_required
+def en1279_create(request):
+    if request.method == 'POST':
+        form = En1279DocumentForm(request.POST)
+        if form.is_valid():
+            doc = form.save(commit=False)
+            doc.created_by = request.user
+            doc.show_signature = bool(form.cleaned_data.get('show_signature'))
+            doc.save()
+            messages.success(
+                request,
+                f'Το έντυπο EN 1279-5 δημιουργήθηκε ({doc.document_number}).',
+            )
+            return redirect('documents:en1279_print', pk=doc.pk)
+    else:
+        form = En1279DocumentForm()
+
+    return render(request, 'documents/en1279_form.html', {
+        'form': form,
+        'page_title': 'Νέο Έντυπο EN 1279-5',
+        'is_edit': False,
+    })
+
+
+@_documents_access_required
+def en1279_edit(request, pk):
+    doc = get_object_or_404(En1279Document, pk=pk)
+    if request.method == 'POST':
+        form = En1279DocumentForm(request.POST, instance=doc)
+        if form.is_valid():
+            doc = form.save(commit=False)
+            doc.show_signature = bool(form.cleaned_data.get('show_signature'))
+            doc.save()
+            messages.success(
+                request,
+                f'Το έντυπο EN 1279-5 ενημερώθηκε ({doc.document_number}).',
+            )
+            return redirect('documents:en1279_print', pk=doc.pk)
+    else:
+        form = En1279DocumentForm(instance=doc)
+
+    return render(request, 'documents/en1279_form.html', {
+        'form': form,
+        'page_title': f'Επεξεργασία EN 1279-5 {doc.document_number}',
+        'doc': doc,
+        'is_edit': True,
+    })
+
+
+@_documents_access_required
+def en1279_delete(request, pk):
+    doc = get_object_or_404(En1279Document, pk=pk)
+    if request.method == 'POST':
+        label = doc.document_number
+        doc.delete()
+        messages.success(request, f'Το έντυπο EN 1279-5 ({label}) διαγράφηκε.')
+        return redirect('documents:en1279_list')
+
+    return render(request, 'documents/en1279_confirm_delete.html', {
+        'doc': doc,
+    })
+
+
+@_documents_access_required
+def en1279_print(request, pk):
+    doc = get_object_or_404(
+        En1279Document.objects.select_related('created_by'),
+        pk=pk,
+    )
+    return render(
+        request,
+        'documents/en1279_print.html',
+        _en1279_print_context(request, doc, pdf_mode=request.GET.get('pdf') == '1'),
+    )
+
+
+@_documents_access_required
+def en1279_email(request, pk):
+    doc = get_object_or_404(En1279Document, pk=pk)
+    if request.method != 'POST':
+        return redirect('documents:en1279_print', pk=pk)
+
+    email_form = DopEmailForm(request.POST)
+    if not email_form.is_valid():
+        for field_errors in email_form.errors.values():
+            for error in field_errors:
+                messages.error(request, error)
+        return redirect('documents:en1279_print', pk=pk)
+
+    if not is_email_configured():
+        messages.error(
+            request,
+            'Οι ρυθμίσεις email δεν έχουν ολοκληρωθεί. Ρυθμίστε τον SMTP server από τις ρυθμίσεις συστήματος.',
+        )
+        return redirect('documents:en1279_print', pk=pk)
+
+    recipient_email = email_form.cleaned_data['email'].strip()
+    custom_message = email_form.cleaned_data.get('message', '').strip()
+
+    email_settings = get_email_settings()
+    sender_name = email_settings.get('from_name') or 'Χριστοδουλόπουλος'
+    subject = f'{sender_name} - Έντυπο EN 1279-5 {doc.document_number}'
+
+    if custom_message:
+        body = custom_message
+    else:
+        body = '\n'.join([
+            f'Σας αποστέλλουμε συνημμένο το έντυπο EN 1279-5 {doc.document_number}.',
+            f'Τύπος προϊόντος: {doc.product_designation}.',
+            '',
+            'Με εκτίμηση,',
+        ])
+
+    filename = f'en1279-5-{doc.document_number}.pdf'
+
+    try:
+        pdf_bytes = generate_en1279_pdf(doc, request)
+    except Exception as exc:
+        messages.error(request, f'Αποτυχία δημιουργίας PDF: {exc}')
+        return redirect('documents:en1279_print', pk=pk)
+
+    success, response_message = send_email_with_attachment(
+        recipient_email,
+        subject,
+        body,
+        pdf_bytes,
+        filename,
+    )
+
+    if success:
+        messages.success(request, f'Το έντυπο EN 1279-5 στάλθηκε στο email {recipient_email}.')
+    else:
+        messages.error(request, response_message or 'Αποτυχία αποστολής email.')
+
+    return redirect('documents:en1279_print', pk=pk)
+
+
+@_documents_access_required
+def en1279_pdf(request, pk):
+    doc = get_object_or_404(En1279Document, pk=pk)
+
+    try:
+        pdf_bytes = generate_en1279_pdf(doc, request)
+    except Exception as exc:
+        messages.error(request, f'Αποτυχία δημιουργίας PDF: {exc}')
+        return redirect('documents:en1279_print', pk=pk)
+
+    filename = f'en1279-5-{doc.document_number}.pdf'
     response = HttpResponse(pdf_bytes, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
