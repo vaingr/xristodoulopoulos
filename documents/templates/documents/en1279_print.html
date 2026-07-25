@@ -4,7 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EN 1279-5 - {{ doc.document_number }}</title>
+    {% load static %}
     <style>
+        @font-face {
+            font-family: 'DocPrint';
+            src: url('{% static "documents/fonts/arial.ttf" %}') format('truetype');
+            font-weight: 400;
+            font-style: normal;
+            font-display: block;
+        }
+        @font-face {
+            font-family: 'DocPrint';
+            src: url('{% static "documents/fonts/arialbd.ttf" %}') format('truetype');
+            font-weight: 700;
+            font-style: normal;
+            font-display: block;
+        }
+
         :root {
             --brand: #00737a;
             --brand-dark: #005f65;
@@ -18,7 +34,7 @@
         * { box-sizing: border-box; }
 
         body {
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: 'DocPrint', Arial, Helvetica, sans-serif;
             color: var(--text);
             background: #e5e7eb;
             margin: 0;
@@ -699,15 +715,10 @@ function closePrintPage() {
     var dopPdfBtn = document.getElementById('dopPdfBtn');
     if (dopPdfBtn) {
         dopPdfBtn.addEventListener('click', async function(event) {
+            event.preventDefault();
             var url = dopPdfBtn.getAttribute('href');
             var suggestedName = dopPdfBtn.dataset.filename || 'en1279-5.pdf';
             if (!url) return;
-
-            if (!window.showSaveFilePicker) {
-                return;
-            }
-
-            event.preventDefault();
 
             try {
                 var response = await fetch(url, { credentials: 'same-origin' });
@@ -715,22 +726,23 @@ function closePrintPage() {
                     throw new Error('Αποτυχία λήψης PDF.');
                 }
                 var blob = await response.blob();
-
-                var handle = await window.showSaveFilePicker({
-                    suggestedName: suggestedName,
-                    types: [{
-                        description: 'PDF',
-                        accept: { 'application/pdf': ['.pdf'] },
-                    }],
-                });
-
-                var writable = await handle.createWritable();
-                await writable.write(blob);
-                await writable.close();
-            } catch (err) {
-                if (err && (err.name === 'AbortError' || err.name === 'NotAllowedError')) {
-                    return;
+                var headerBytes = new Uint8Array(await blob.slice(0, 5).arrayBuffer());
+                var magic = String.fromCharCode.apply(null, headerBytes);
+                if (magic !== '%PDF-') {
+                    throw new Error('Το αρχείο που επιστράφηκε δεν είναι έγκυρο PDF.');
                 }
+                var pdfBlob = new Blob([blob], { type: 'application/pdf' });
+                var objectUrl = URL.createObjectURL(pdfBlob);
+                var link = document.createElement('a');
+                link.href = objectUrl;
+                link.download = suggestedName;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                setTimeout(function() {
+                    URL.revokeObjectURL(objectUrl);
+                }, 1500);
+            } catch (err) {
                 window.location.href = url;
             }
         });

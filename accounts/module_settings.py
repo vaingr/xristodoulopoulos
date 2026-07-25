@@ -2,6 +2,13 @@
 
 SIDEBAR_MODULES = [
     {
+        'key': 'home',
+        'env_key': 'MODULE_HOME',
+        'label': 'Αρχική',
+        'icon': 'fas fa-home',
+        'description': 'Εμφάνιση της επιλογής «Αρχική» στο sidebar.',
+    },
+    {
         'key': 'customers',
         'env_key': 'CUSTOMERS_ENABLED',
         'label': 'Πελάτες',

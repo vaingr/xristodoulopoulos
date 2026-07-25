@@ -472,7 +472,9 @@
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <ul class="sidebar-menu">
+            {% if user.is_superuser or sidebar_modules.home %}
             <li><a href="{% url 'dashboard' %}"><i class="fas fa-home"></i> Αρχική</a></li>
+            {% endif %}
             {% if user.is_superuser or sidebar_modules.customers and wh_perms.perm_customers %}
             <li><a href="{% url 'customers:customer_list' %}"><i class="fas fa-users"></i> Πελάτες</a></li>
             {% endif %}
